@@ -141,7 +141,8 @@ func (c *Connection) MustInsert(tableName string, dataMap map[string]interface{}
 	}
 	return result
 }
-	//Insert ...
+
+//Insert ...
 func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*Result, error)	{
 	var names []string
 	var questionMarks []string
@@ -163,8 +164,6 @@ func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*
 
 //GetEnumValues ...
 func (c *Connection) GetEnumValues(field string) ([]string, error)	{
-	// columns := struct { ColumnType		string 		`db:"column_type"` }{}
-
 	cols := strings.Split(field, `.`)
 
 	enum, e := c.Get(`SELECT column_type FROM information_schema.columns WHERE table_name = ? 
@@ -182,3 +181,10 @@ func (c *Connection) GetEnumValues(field string) ([]string, error)	{
 	return values, nil
 }
 
+//Close ...
+func (c *Connection) Close() error	{
+	if c.db == nil	{
+		return nil
+	}
+	return c.db.Close()
+}
