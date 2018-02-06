@@ -28,10 +28,7 @@ func (t *Tx) Commit() error {
 	if t.finish {
 		return errors.New(`unable to commit, transaction already finish`)
 	}
-	if e := t.tx.Commit(); e != nil {
-		return e
-	}
-	return nil
+	return t.tx.Commit()
 }
 
 //Rollback ...
@@ -39,10 +36,7 @@ func (t *Tx) Rollback() error {
 	if t.finish {
 		return errors.New(`unable to rollback, transaction already finish`)
 	}
-	if e := t.tx.Rollback(); e != nil {
-		return e
-	}
-	return nil
+	return t.tx.Rollback()
 }
 
 //Select ...
@@ -248,7 +242,8 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 			var val *float64
 			contents[i] = &val
 		case reflect.TypeOf(sql.RawBytes{}):
-			if strings.HasSuffix(colType.DatabaseTypeName(), `CHAR`) {
+			regex := getRegex()
+			if regex.Match([]byte(colType.DatabaseTypeName()))	{
 				var val *string
 				contents[i] = &val
 			} else {

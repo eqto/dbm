@@ -16,7 +16,7 @@ type Result struct	{
 }
 
 //LastInsertID ...
-func (r *Result) LastInsertID() (int, error)	{
+func (r *Result) LastInsertID() (ID int, e error)	{
 	if id, e := r.result.LastInsertId(); e != nil	{
 		return 0, e
 	} else {

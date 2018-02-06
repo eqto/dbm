@@ -7,6 +7,7 @@
 package db
 
 import (
+	"gitlab.com/tuxer/go-logger"
 	"reflect"
 	"strconv"
 	"time"
@@ -130,6 +131,7 @@ func (r Resultset) GetString(name string) *string {
 		case *time.Time:
 			str = val.String()
 		default:
+			log.D(`masuk2`)
 			println(reflect.TypeOf(val).String())
 		}
 		return &str

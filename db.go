@@ -7,10 +7,14 @@
 package db
 
 import (
+	"regexp"
 	"database/sql"
 )
 
-var defaultCn *Connection
+var (
+	defaultCn			*Connection
+	regexStringColType	*regexp.Regexp
+)
 
 //NewConnection ...
 func NewConnection(host string, username string, password string, databaseName string) (*Connection, error)	{
@@ -28,4 +32,9 @@ func NewConnection(host string, username string, password string, databaseName s
 	return defaultCn, nil
 }
 
-
+func getRegex() *regexp.Regexp	{
+	if regexStringColType == nil	{
+		regexStringColType, _ = regexp.Compile(`(?i)^.*CHAR|TEXT$`)
+	}
+	return regexStringColType
+}
