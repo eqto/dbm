@@ -188,6 +188,10 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 	if e != nil {
 		return e
 	}
+	if rs == nil || len(rs) == 0	{
+		return errors.New(`Record not found`)
+	}
+
 	typeOf = typeOf.Elem()
 	return t.assignStruct(dest, t.createFieldMap(typeOf), rs, typeOf)
 }
