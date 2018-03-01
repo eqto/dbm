@@ -189,7 +189,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 		return e
 	}
 	if rs == nil || len(rs) == 0	{
-		return errors.New(`Record not found`)
+		return errors.New(`record not found`)
 	}
 
 	typeOf = typeOf.Elem()
