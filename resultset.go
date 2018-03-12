@@ -20,17 +20,24 @@ type Resultset map[string]interface{}
 //GetInt ...
 func (r Resultset) GetInt(name string) *int {
 	if val := r.getValue(name); val != nil {
-		if i, ok := val.Interface().(**uint64); ok {
-			if *i == nil {
+		switch val := val.Interface().(type) {
+		case **uint64:
+			if *val == nil {
 				return nil
 			}
-			intVal := int(**i)
+			intVal := int(**val)
 			return &intVal
-		} else if str, ok := val.Interface().(**string); ok {
-			if *str == nil {
+		case **float64:
+			if *val == nil {
 				return nil
 			}
-			intVal, e := strconv.Atoi(**str)
+			intVal := int(**val)
+			return &intVal
+		case **string:
+			if *val == nil {
+				return nil
+			}
+			intVal, e := strconv.Atoi(**val)
 			if e != nil {
 				return nil
 			}
