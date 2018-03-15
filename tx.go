@@ -43,7 +43,6 @@ func (t *Tx) Rollback() error {
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	rows, e := t.tx.Query(query, params...)
 	if e != nil {
-		println(e.Error())
 		return nil, errors.New(`error executing query: ` + query)
 	}
 	cols, e := rows.Columns()
@@ -109,7 +108,7 @@ func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 
 //MustGet ...
 func (t *Tx) MustGet(query string, params ...interface{}) Resultset {
-	rs, e := t.Get(query, params)
+	rs, e := t.Get(query, params...)
 	if e != nil {
 		panic(e)
 	}
