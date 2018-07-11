@@ -101,6 +101,15 @@ func (c *Connection) GetStruct(dest interface{}, query string, params...interfac
 	return tx.GetStruct(dest, query, params...)
 }
 	
+//MustSelect ...
+func (c *Connection) MustSelect(query string, params...interface{}) []Resultset	{
+	rs, e := c.Select(query, params...)
+	if e != nil	{
+		panic(e)
+	}
+	return rs
+}
+
 //Select ...
 func (c *Connection) Select(query string, params...interface{}) ([]Resultset, error)	{
 	tx, e := c.Begin()
