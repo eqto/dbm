@@ -7,7 +7,6 @@
 package db
 
 import (
-	"gitlab.com/tuxer/go-logger"
 	"reflect"
 	"strconv"
 	"time"
@@ -96,6 +95,12 @@ func (r Resultset) getValue(name string) *reflect.Value {
 func (r Resultset) GetFloat(name string) *float64 {
 	if val := r.getValue(name); val != nil {
 		switch val := val.Interface().(type) {
+		case **uint64:
+			if *val == nil {
+				return nil
+			}
+			floatVal := float64(int(**val))
+			return &floatVal
 		case **float64:
 			return *val
 		}
@@ -138,7 +143,6 @@ func (r Resultset) GetString(name string) *string {
 		case *time.Time:
 			str = val.String()
 		default:
-			log.D(`masuk2`)
 			println(reflect.TypeOf(val).String())
 		}
 		return &str
