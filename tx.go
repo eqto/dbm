@@ -82,7 +82,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 	}
 
 	slice := reflect.MakeSlice(typeOf, 0, len(rs))
-	if len(rs) == 0	{
+	if len(rs) == 0 {
 		return nil
 	}
 	elType := typeOf.Elem()
@@ -151,8 +151,8 @@ func (t *Tx) assignStruct(dest interface{}, fieldMap map[string]string, rs Resul
 			case reflect.TypeOf(time.Time{}).Kind():
 				val = rs.GetTime(key)
 			default:
-				println(`unsupported type: ` + kind.String())
-				return errors.New(`unsupported type: ` + kind.String())
+				println(`unsupported type: ` + key + `:` + kind.String())
+				return errors.New(`unsupported type: ` + key + `:` + kind.String())
 			}
 		} else {
 			switch kind {
@@ -165,8 +165,8 @@ func (t *Tx) assignStruct(dest interface{}, fieldMap map[string]string, rs Resul
 			case reflect.TypeOf(time.Time{}).Kind():
 				val = rs.GetTimeD(key)
 			default:
-				println(`unsupported type: ` + kind.String())
-				return errors.New(`unsupported type: ` + kind.String())
+				println(`unsupported type: ` + key + `:` + kind.String())
+				return errors.New(`unsupported type: ` + key + `:` + kind.String())
 			}
 		}
 		val = reflect.ValueOf(val)
@@ -187,7 +187,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 	if e != nil {
 		return e
 	}
-	if rs == nil || len(rs) == 0	{
+	if rs == nil || len(rs) == 0 {
 		return errors.New(`record not found`)
 	}
 
@@ -246,7 +246,7 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 			contents[i] = &val
 		case reflect.TypeOf(sql.RawBytes{}):
 			regex := getRegex()
-			if regex.Match([]byte(colType.DatabaseTypeName()))	{
+			if regex.Match([]byte(colType.DatabaseTypeName())) {
 				var val *string
 				contents[i] = &val
 			} else {
