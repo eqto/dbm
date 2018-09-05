@@ -39,6 +39,15 @@ func (t *Tx) Rollback() error {
 	return t.tx.Rollback()
 }
 
+//MustSelect ...
+func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
+	if rs, e := t.Select(query, params...); e != nil {
+		panic(e)
+	} else {
+		return rs
+	}
+}
+
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	rows, e := t.tx.Query(query, params...)
