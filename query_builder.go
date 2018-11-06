@@ -109,7 +109,7 @@ func (q *QueryBuilder) splitColumns(rawColumns string) {
 			q.aliasMap[matches[2]] = matches[1]
 		} else {
 			matches = strings.Split(trimmed, `.`)
-			if matches[1] != `` {
+			if len(matches) > 1 && matches[1] != `` {
 				q.aliasMap[matches[1]] = trimmed
 			}
 		}
