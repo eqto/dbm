@@ -9,6 +9,7 @@ package db
 import (
 	"bytes"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -22,15 +23,17 @@ type QueryBuilder struct {
 	whereParams []string
 	fromParams  string
 	orderParams []string
+	limitStart  int
+	limitLength int
 }
 
-type field struct	{
+type field struct {
 	name, alias string
 }
 
 //String ...
-func (f *field) String() string	{
-	if f.alias == ``	{
+func (f *field) String() string {
+	if f.alias == `` {
 		return f.name
 	}
 	return f.name + ` AS ` + f.alias
@@ -71,7 +74,7 @@ func (q *QueryBuilder) splitColumns(rawColumns string) {
 	var buffer bytes.Buffer
 	var fields []string
 	sql := rawColumns
-	if q.aliasMap == nil	{
+	if q.aliasMap == nil {
 		q.aliasMap = make(map[string]string)
 	}
 	for {
@@ -97,23 +100,30 @@ func (q *QueryBuilder) splitColumns(rawColumns string) {
 	}
 
 	regex := regexp.MustCompile(`(?Uis)^(.*)(?:\s+AS\s+(.*)|)$`)
+
 	for _, val := range fields {
-		matches := regex.FindStringSubmatch(strings.Trim(val, "\r\n\t"))
+		trimmed := strings.Trim(val, "\r\n\t")
+		matches := regex.FindStringSubmatch(trimmed)
 		field := field{name: matches[1], alias: matches[2]}
-		if matches[2] != ``	{
+		if matches[2] != `` {
 			q.aliasMap[matches[2]] = matches[1]
+		} else {
+			matches = strings.Split(trimmed, `.`)
+			if matches[1] != `` {
+				q.aliasMap[matches[1]] = trimmed
+			}
 		}
 		q.fields = append(q.fields, field)
 	}
 }
 
 //GetField ...
-func (q *QueryBuilder) GetField(name string) string	{
-	if field, ok := q.aliasMap[name]; ok	{
+func (q *QueryBuilder) GetField(name string) string {
+	if field, ok := q.aliasMap[name]; ok {
 		return field
 	}
-	for _, val := range q.fields	{
-		if val.name == name || strings.HasSuffix(val.name, `.` + name)	{
+	for _, val := range q.fields {
+		if val.name == name || strings.HasSuffix(val.name, `.`+name) {
 			return val.name
 		}
 	}
@@ -130,9 +140,15 @@ func (q *QueryBuilder) Order(field string, order string) {
 	q.orderParams = append(q.orderParams, field+` `+order)
 }
 
+//Limit ...
+func (q *QueryBuilder) Limit(start int, length int) {
+	q.limitLength = length
+	q.limitStart = start
+}
+
 //WhereOp ...
 func (q *QueryBuilder) WhereOp(name string, operator string) {
-	if field, ok := q.aliasMap[name]; ok	{
+	if field, ok := q.aliasMap[name]; ok {
 		name = field
 	}
 	if operator == `` {
@@ -158,6 +174,9 @@ func (q *QueryBuilder) ToSQL() string {
 	}
 	if len(q.orderParams) > 0 {
 		buffer.WriteString(` ORDER BY ` + strings.Join(q.orderParams, `, `))
+	}
+	if q.limitLength > 0 {
+		buffer.WriteString(` LIMIT ` + strconv.Itoa(q.limitStart) + `, ` + strconv.Itoa(q.limitLength))
 	}
 
 	return buffer.String()
