@@ -8,6 +8,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"regexp"
 )
 
@@ -17,9 +18,9 @@ var (
 )
 
 //NewConnection ...
-func NewConnection(host string, username string, password string, databaseName string) (*Connection, error) {
-	db, e := sql.Open(`mysql`, username+`:`+password+`@tcp(`+host+`)/`+
-		databaseName+`?parseTime=true&loc=Local&collation=latin1_general_ci`)
+func NewConnection(host string, port int, username, password, databaseName string) (*Connection, error) {
+	db, e := sql.Open(`mysql`,
+		fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`, username, password, host, port, databaseName))
 
 	if e != nil {
 		return nil, e
