@@ -39,6 +39,24 @@ func (t *Tx) Rollback() error {
 	return t.tx.Rollback()
 }
 
+//MustInsert ...
+func (t *Tx) MustInsert(tableName string, dataMap map[string]interface{}) *Result {
+	if rs, e := t.Insert(tableName, dataMap); e != nil {
+		panic(e)
+	} else {
+		return rs
+	}
+}
+
+//MustSelect ...
+func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
+	if rs, e := t.Select(query, params...); e != nil {
+		panic(e)
+	} else {
+		return rs
+	}
+}
+
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	rows, e := t.tx.Query(query, params...)
