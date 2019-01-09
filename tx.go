@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"gitlab.com/tuxer/go-logger"
+
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -59,6 +61,9 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
+	defer func() {
+		log.D(recover())
+	}()
 	rows, e := t.tx.Query(query, params...)
 	if e != nil {
 		return nil, errors.New(`error executing query: ` + query)
@@ -257,7 +262,7 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 		colType := colTypes[i]
 		switch scanType := colType.ScanType(); scanType {
 		case reflect.TypeOf(sql.NullInt64{}):
-			var val *uint64
+			var val *int64
 			contents[i] = &val
 		case reflect.TypeOf(sql.NullFloat64{}):
 			var val *float64
@@ -278,20 +283,21 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 			switch scanType.Kind() {
 			case reflect.Uint64:
 				fallthrough
-			case reflect.Int64:
-				fallthrough
 			case reflect.Uint32:
-				fallthrough
-			case reflect.Int32:
 				fallthrough
 			case reflect.Uint16:
 				fallthrough
+			case reflect.Uint8:
+				var val *uint64
+				contents[i] = &val
+			case reflect.Int64:
+				fallthrough
+			case reflect.Int32:
+				fallthrough
 			case reflect.Int16:
 				fallthrough
-			case reflect.Uint8:
-				fallthrough
 			case reflect.Int8:
-				var val *uint64
+				var val *int64
 				contents[i] = &val
 			case reflect.Float64:
 				fallthrough

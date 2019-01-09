@@ -15,12 +15,17 @@ import (
 //Resultset ...
 type Resultset map[string]interface{}
 
-
 //GetInt ...
 func (r Resultset) GetInt(name string) *int {
 	if val := r.getValue(name); val != nil {
 		switch val := val.Interface().(type) {
 		case **uint64:
+			if *val == nil {
+				return nil
+			}
+			intVal := int(**val)
+			return &intVal
+		case **int64:
 			if *val == nil {
 				return nil
 			}
@@ -101,6 +106,12 @@ func (r Resultset) GetFloat(name string) *float64 {
 			}
 			floatVal := float64(int(**val))
 			return &floatVal
+		case **int64:
+			if *val == nil {
+				return nil
+			}
+			floatVal := float64(int(**val))
+			return &floatVal
 		case **float64:
 			return *val
 		}
@@ -138,6 +149,8 @@ func (r Resultset) GetString(name string) *string {
 			str = string(*val)
 		case **uint64:
 			str = strconv.FormatUint(**val, 10)
+		case **int64:
+			str = strconv.FormatInt(**val, 10)
 		case **float64:
 			str = strconv.FormatUint(uint64(**val), 10)
 		case *time.Time:
@@ -161,6 +174,8 @@ func (r Resultset) GetBytes(name string) []byte {
 			return *val
 		case **uint64:
 			return []byte(strconv.FormatUint(**val, 10))
+		case **int64:
+			return []byte(strconv.FormatInt(**val, 10))
 		case **float64:
 			return []byte(strconv.FormatUint(uint64(**val), 10))
 		default:
