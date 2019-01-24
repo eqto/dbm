@@ -62,7 +62,9 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	defer func() {
-		log.D(recover())
+		if r := recover(); r != nil {
+			log.D(r)
+		}
 	}()
 	rows, e := t.tx.Query(query, params...)
 	if e != nil {
