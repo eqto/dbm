@@ -158,17 +158,9 @@ func (q *QueryBuilder) WhereOp(name string, operator string) {
 	q.whereParams = append(q.whereParams, where)
 }
 
-//ToSQL ...
-func (q *QueryBuilder) ToSQL() string {
-	var sqlFields []string
-	for _, val := range q.fields {
-		sqlFields = append(sqlFields, val.String())
-	}
-
-	strFields := strings.Join(sqlFields, `, `)
+//ToConditionSQL ...
+func (q *QueryBuilder) ToConditionSQL() string {
 	var buffer bytes.Buffer
-	buffer.WriteString(`SELECT ` + strFields + ` FROM ` + q.fromParams)
-
 	if len(q.whereParams) > 0 {
 		buffer.WriteString(` WHERE ` + strings.Join(q.whereParams, ` AND `))
 	}
@@ -178,6 +170,25 @@ func (q *QueryBuilder) ToSQL() string {
 	if q.limitLength > 0 {
 		buffer.WriteString(` LIMIT ` + strconv.Itoa(q.limitStart) + `, ` + strconv.Itoa(q.limitLength))
 	}
+
+	return buffer.String()
+}
+
+//ToFromSQL ...
+func (q *QueryBuilder) ToFromSQL() string {
+	return ` FROM ` + q.fromParams
+}
+
+//ToSQL ...
+func (q *QueryBuilder) ToSQL() string {
+	var sqlFields []string
+	for _, val := range q.fields {
+		sqlFields = append(sqlFields, val.String())
+	}
+
+	strFields := strings.Join(sqlFields, `, `)
+	var buffer bytes.Buffer
+	buffer.WriteString(`SELECT ` + strFields + q.ToFromSQL() + q.ToConditionSQL())
 
 	return buffer.String()
 }
