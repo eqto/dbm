@@ -19,8 +19,14 @@ import (
 
 //Tx ...
 type Tx struct {
-	tx     *sql.Tx
-	finish bool
+	tx         *sql.Tx
+	finish     bool
+	autocommit bool
+}
+
+//SetAutoCommit ...
+func (t *Tx) SetAutoCommit(autocommit bool) {
+	t.autocommit = autocommit
 }
 
 //Commit ...
@@ -28,6 +34,7 @@ func (t *Tx) Commit() error {
 	if t.finish {
 		return errors.New(`unable to commit, transaction already finish`)
 	}
+	t.finish = true
 	return t.tx.Commit()
 }
 
@@ -36,6 +43,7 @@ func (t *Tx) Rollback() error {
 	if t.finish {
 		return errors.New(`unable to rollback, transaction already finish`)
 	}
+	t.finish = true
 	return t.tx.Rollback()
 }
 
@@ -81,6 +89,7 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		}
 		results = append(results, rs)
 	}
+
 	return results, nil
 }
 
@@ -219,6 +228,12 @@ func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
 	if e != nil {
 		return nil, e
 	}
+	if t.autocommit {
+		if e := t.Commit(); e != nil {
+			return nil, e
+		}
+	}
+
 	return &Result{result: result}, e
 }
 
