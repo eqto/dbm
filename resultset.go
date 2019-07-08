@@ -37,15 +37,21 @@ func (r Resultset) GetInt(name string) *int {
 			}
 			intVal := int(**val)
 			return &intVal
+		case *[]uint8:
+			if intVal, e := strconv.Atoi(string(*val)); e == nil {
+				return &intVal
+			}
+			return nil
 		case **string:
 			if *val == nil {
 				return nil
 			}
-			intVal, e := strconv.Atoi(**val)
-			if e != nil {
-				return nil
+			if intVal, e := strconv.Atoi(**val); e == nil {
+				return &intVal
 			}
-			return &intVal
+			return nil
+		default:
+
 		}
 	}
 	return nil
