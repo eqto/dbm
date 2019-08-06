@@ -161,8 +161,11 @@ func (r Resultset) GetString(name string) *string {
 			str = strconv.FormatUint(uint64(**val), 10)
 		case *time.Time:
 			str = val.String()
+		case **time.Time:
+			v := *val
+			str = v.String()
 		default:
-			println(reflect.TypeOf(val).String())
+			println(`unable to parse string from ` + reflect.TypeOf(val).String())
 		}
 		return &str
 	}
