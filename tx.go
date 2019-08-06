@@ -170,13 +170,13 @@ func (t *Tx) assignStruct(dest interface{}, fieldMap map[string]string, rs Resul
 			kind = field.Type.Elem().Kind()
 			switch kind {
 			case reflect.String:
-				val = rs.GetString(key)
+				val = rs.StringNil(key)
 			case reflect.Int:
-				val = rs.GetInt(key)
+				val = rs.IntNil(key)
 			case reflect.Float64:
-				val = rs.GetFloat(key)
+				val = rs.FloatNil(key)
 			case reflect.TypeOf(time.Time{}).Kind():
-				val = rs.GetTime(key)
+				val = rs.TimeNil(key)
 			default:
 				println(`unsupported type: ` + key + `:` + kind.String())
 				return errors.New(`unsupported type: ` + key + `:` + kind.String())
@@ -184,13 +184,13 @@ func (t *Tx) assignStruct(dest interface{}, fieldMap map[string]string, rs Resul
 		} else {
 			switch kind {
 			case reflect.String:
-				val = rs.GetStringD(key)
+				val = rs.String(key)
 			case reflect.Int:
-				val = rs.GetIntD(key)
+				val = rs.Int(key)
 			case reflect.Float64:
-				val = rs.GetFloatD(key)
+				val = rs.Float(key)
 			case reflect.TypeOf(time.Time{}).Kind():
-				val = rs.GetTimeD(key)
+				val = rs.Time(key)
 			default:
 				println(`unsupported type: ` + key + `:` + kind.String())
 				return errors.New(`unsupported type: ` + key + `:` + kind.String())
@@ -198,7 +198,6 @@ func (t *Tx) assignStruct(dest interface{}, fieldMap map[string]string, rs Resul
 		}
 		val = reflect.ValueOf(val)
 		valField.Set(val.(reflect.Value))
-
 	}
 	return nil
 }

@@ -15,8 +15,8 @@ import (
 //Resultset ...
 type Resultset map[string]interface{}
 
-//GetInt ...
-func (r Resultset) GetInt(name string) *int {
+//IntNil ...
+func (r Resultset) IntNil(name string) *int {
 	if val := r.getValue(name); val != nil {
 		switch val := val.Interface().(type) {
 		case **uint64:
@@ -51,24 +51,24 @@ func (r Resultset) GetInt(name string) *int {
 	return nil
 }
 
-//GetIntD ...
-func (r Resultset) GetIntD(name string) int {
-	if val := r.GetInt(name); val != nil {
+//Int ...
+func (r Resultset) Int(name string) int {
+	if val := r.IntNil(name); val != nil {
 		return *val
 	}
 	return 0
 }
 
-//GetIntOr ...
-func (r Resultset) GetIntOr(name string, defValue int) int {
-	if val := r.GetInt(name); val != nil {
+//IntOr ...
+func (r Resultset) IntOr(name string, defValue int) int {
+	if val := r.IntNil(name); val != nil {
 		return *val
 	}
 	return defValue
 }
 
-//GetTime ...
-func (r Resultset) GetTime(name string) *time.Time {
+//TimeNil ...
+func (r Resultset) TimeNil(name string) *time.Time {
 	if val := r.getValue(name); val != nil {
 		if val, ok := val.Interface().(**time.Time); ok {
 			if *val == nil {
@@ -80,9 +80,9 @@ func (r Resultset) GetTime(name string) *time.Time {
 	return nil
 }
 
-//GetTimeD ...
-func (r Resultset) GetTimeD(name string) time.Time {
-	if val := r.GetTime(name); val != nil {
+//Time ...
+func (r Resultset) Time(name string) time.Time {
+	if val := r.TimeNil(name); val != nil {
 		return *val
 	}
 	return time.Time{}
@@ -96,8 +96,8 @@ func (r Resultset) getValue(name string) *reflect.Value {
 	return nil
 }
 
-//GetFloat ...
-func (r Resultset) GetFloat(name string) *float64 {
+//FloatNil ...
+func (r Resultset) FloatNil(name string) *float64 {
 	if val := r.getValue(name); val != nil {
 		switch val := val.Interface().(type) {
 		case **uint64:
@@ -119,24 +119,24 @@ func (r Resultset) GetFloat(name string) *float64 {
 	return nil
 }
 
-//GetFloatD ...
-func (r Resultset) GetFloatD(name string) float64 {
-	if val := r.GetFloat(name); val != nil {
+//Float ...
+func (r Resultset) Float(name string) float64 {
+	if val := r.FloatNil(name); val != nil {
 		return *val
 	}
 	return 0
 }
 
-//GetFloatOr ...
-func (r Resultset) GetFloatOr(name string, defValue float64) float64 {
-	if val := r.GetFloat(name); val != nil {
+//FloatOr ...
+func (r Resultset) FloatOr(name string, defValue float64) float64 {
+	if val := r.FloatNil(name); val != nil {
 		return *val
 	}
 	return defValue
 }
 
-//GetString ...
-func (r Resultset) GetString(name string) *string {
+//StringNil ...
+func (r Resultset) StringNil(name string) *string {
 	if val := r.getValue(name); val != nil {
 		if reflect.ValueOf(val.Interface()).Elem().IsNil() {
 			return nil
@@ -163,8 +163,8 @@ func (r Resultset) GetString(name string) *string {
 	return nil
 }
 
-//GetBytes ...
-func (r Resultset) GetBytes(name string) []byte {
+//Bytes ...
+func (r Resultset) Bytes(name string) []byte {
 	if val := r.getValue(name); val != nil {
 		if reflect.ValueOf(val.Interface()).Elem().IsNil() {
 			return nil
@@ -185,17 +185,17 @@ func (r Resultset) GetBytes(name string) []byte {
 	return nil
 }
 
-//GetStringD ...
-func (r Resultset) GetStringD(name string) string {
-	if val := r.GetString(name); val != nil {
+//String ...
+func (r Resultset) String(name string) string {
+	if val := r.StringNil(name); val != nil {
 		return *val
 	}
 	return ``
 }
 
-//GetStringOr ...
-func (r Resultset) GetStringOr(name string, defValue string) string {
-	if val := r.GetString(name); val != nil {
+//StringOr ...
+func (r Resultset) StringOr(name string, defValue string) string {
+	if val := r.StringNil(name); val != nil {
 		return *val
 	}
 	return defValue
