@@ -69,7 +69,7 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	rows, e := t.tx.Query(query, params...)
 	if e != nil {
-		return nil, errors.New(`error executing query: ` + query)
+		return nil, e
 	}
 	cols, e := rows.Columns()
 	colTypes, e := rows.ColumnTypes()
