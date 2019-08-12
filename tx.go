@@ -29,6 +29,15 @@ func (t *Tx) SetAutoCommit(autocommit bool) {
 	t.autocommit = autocommit
 }
 
+//MustRecover ...
+func (t *Tx) MustRecover() {
+	if r := recover(); r != nil {
+		t.Rollback()
+		panic(r)
+	}
+	t.Commit()
+}
+
 //Commit ...
 func (t *Tx) Commit() error {
 	if t.finish {
