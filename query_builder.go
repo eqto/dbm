@@ -152,9 +152,13 @@ func (q *QueryBuilder) WhereOp(name string, operator string) {
 		name = field
 	}
 	if operator == `` {
-		operator = ` = `
+		operator = `=`
 	}
+	operator = strings.TrimSpace(operator)
 	where := name + operator + `?`
+	if operator == `text` {
+		where = `MATCH(` + name + `) AGAINST(? IN BOOLEAN MODE)`
+	}
 	q.whereParams = append(q.whereParams, where)
 }
 
