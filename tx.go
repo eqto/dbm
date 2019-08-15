@@ -77,6 +77,7 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	rows, e := t.tx.Query(query, params...)
+	defer rows.Close()
 	if e != nil {
 		return nil, e
 	}
