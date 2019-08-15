@@ -11,11 +11,27 @@ import (
 	"database/sql"
 	"regexp"
 	"strings"
+	"time"
 )
 
 //Connection ...
 type Connection struct {
 	db *sql.DB
+}
+
+//SetConnMaxLifetime ...
+func (c *Connection) SetConnMaxLifetime(duration time.Duration) {
+	c.db.SetConnMaxLifetime(duration)
+}
+
+//SetMaxIdleConns ...
+func (c *Connection) SetMaxIdleConns(max int) {
+	c.db.SetMaxIdleConns(max)
+}
+
+//SetMaxOpenConns ...
+func (c *Connection) SetMaxOpenConns(max int) {
+	c.db.SetMaxOpenConns(max)
 }
 
 //Begin ...
