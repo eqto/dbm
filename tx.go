@@ -38,6 +38,15 @@ func (t *Tx) MustRecover() {
 	t.Commit()
 }
 
+//Recover ...
+func (t *Tx) Recover() {
+	if r := recover(); r != nil {
+		t.Rollback()
+	} else {
+		t.Commit()
+	}
+}
+
 //Commit ...
 func (t *Tx) Commit() error {
 	if t.finish {
