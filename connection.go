@@ -67,14 +67,7 @@ func (c *Connection) Exec(query string, params ...interface{}) (*Result, error) 
 	if e != nil {
 		return nil, e
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-			panic(r)
-		} else {
-			tx.Commit()
-		}
-	}()
+	defer tx.Recover()
 	return tx.Exec(query, params...)
 }
 
@@ -93,12 +86,8 @@ func (c *Connection) Get(query string, params ...interface{}) (Resultset, error)
 	if e != nil {
 		return nil, e
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-		tx.Commit()
-	}()
+	defer tx.Recover()
+
 	return tx.Get(query, params...)
 }
 
@@ -108,12 +97,7 @@ func (c *Connection) GetStruct(dest interface{}, query string, params ...interfa
 	if e != nil {
 		return e
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-		tx.Commit()
-	}()
+	defer tx.Recover()
 
 	return tx.GetStruct(dest, query, params...)
 }
@@ -133,13 +117,7 @@ func (c *Connection) Select(query string, params ...interface{}) ([]Resultset, e
 	if e != nil {
 		return nil, e
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		} else {
-			tx.Commit()
-		}
-	}()
+	defer tx.Recover()
 	return tx.Select(query, params...)
 }
 
@@ -149,13 +127,7 @@ func (c *Connection) SelectStruct(dest interface{}, query string, params ...inte
 	if e != nil {
 		return e
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		} else {
-			tx.Commit()
-		}
-	}()
+	defer tx.Recover()
 	return tx.SelectStruct(dest, query, params...)
 }
 
@@ -213,4 +185,9 @@ func (c *Connection) Close() error {
 		return nil
 	}
 	return c.db.Close()
+}
+
+//Tx ...
+func (c *Connection) Tx() *Tx {
+	return &Tx{db: c.db}
 }

@@ -2,7 +2,7 @@
 * Created by Visual Studio Code.
 * User: tuxer
 * Created At: 2017-12-18 01:43:25
-*/
+ */
 
 package db
 
@@ -11,13 +11,13 @@ import (
 )
 
 //Result ...
-type Result struct	{
-	result		sql.Result
+type Result struct {
+	result sql.Result
 }
 
 //LastInsertID ...
-func (r *Result) LastInsertID() (ID int, e error)	{
-	if id, e := r.result.LastInsertId(); e != nil	{
+func (r *Result) LastInsertID() (ID int, e error) {
+	if id, e := r.result.LastInsertId(); e != nil {
 		return 0, e
 	} else {
 		return int(id), e
@@ -25,8 +25,8 @@ func (r *Result) LastInsertID() (ID int, e error)	{
 }
 
 //MustLastInsertID ...
-func (r *Result) MustLastInsertID() int	{
-	if id, e := r.LastInsertID(); e != nil	{
+func (r *Result) MustLastInsertID() int {
+	if id, e := r.LastInsertID(); e != nil {
 		panic(e)
 	} else {
 		return id
@@ -34,18 +34,18 @@ func (r *Result) MustLastInsertID() int	{
 }
 
 //RowsAffected ...
-func (r *Result) RowsAffected() (int, error)	{
+func (r *Result) RowsAffected() (int, error) {
 	val, e := r.result.RowsAffected()
-	if e != nil	{
+	if e != nil {
 		return 0, e
 	}
 	return int(val), e
 }
 
 //MustRowsAffected ...
-func (r *Result) MustRowsAffected() int	{
+func (r *Result) MustRowsAffected() int {
 	row, e := r.RowsAffected()
-	if e != nil	{
+	if e != nil {
 		panic(e)
 	}
 	return int(row)

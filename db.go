@@ -10,6 +10,8 @@ import (
 	"database/sql"
 	"fmt"
 	"regexp"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (

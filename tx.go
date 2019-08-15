@@ -19,14 +19,9 @@ import (
 
 //Tx ...
 type Tx struct {
-	tx         *sql.Tx
-	finish     bool
-	autocommit bool
-}
-
-//SetAutoCommit ...
-func (t *Tx) SetAutoCommit(autocommit bool) {
-	t.autocommit = autocommit
+	db     *sql.DB
+	tx     *sql.Tx
+	finish bool
 }
 
 //MustRecover ...
@@ -49,6 +44,9 @@ func (t *Tx) Recover() {
 
 //Commit ...
 func (t *Tx) Commit() error {
+	if t.tx == nil {
+		return nil
+	}
 	if t.finish {
 		return errors.New(`unable to commit, transaction already finish`)
 	}
@@ -58,6 +56,9 @@ func (t *Tx) Commit() error {
 
 //Rollback ...
 func (t *Tx) Rollback() error {
+	if t.tx == nil {
+		return nil
+	}
 	if t.finish {
 		return errors.New(`unable to rollback, transaction already finish`)
 	}
@@ -85,11 +86,18 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
-	rows, e := t.tx.Query(query, params...)
+	var rows *sql.Rows
+	var e error
+	if t.tx == nil {
+		rows, e = t.db.Query(query, params...)
+	} else {
+		rows, e = t.tx.Query(query, params...)
+	}
 	defer rows.Close()
 	if e != nil {
 		return nil, e
 	}
+
 	cols, e := rows.Columns()
 	colTypes, e := rows.ColumnTypes()
 
@@ -100,6 +108,7 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		e := rows.Scan(contents...)
 		if e != nil {
 			println(e.Error())
+			rows.Close()
 			return nil, e
 		}
 		rs := Resultset{}
@@ -108,6 +117,7 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		}
 		results = append(results, rs)
 	}
+	rows.Close()
 
 	return results, nil
 }
@@ -242,17 +252,18 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 
 //Exec ...
 func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
-	result, e := t.tx.Exec(query, params...)
+	var res sql.Result
+	var e error
+	if t.tx == nil {
+		res, e = t.db.Exec(query, params...)
+	} else {
+		res, e = t.tx.Exec(query, params...)
+	}
 	if e != nil {
 		return nil, e
 	}
-	if t.autocommit {
-		if e := t.Commit(); e != nil {
-			return nil, e
-		}
-	}
 
-	return &Result{result: result}, e
+	return &Result{result: res}, e
 }
 
 //MustExec ...
