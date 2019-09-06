@@ -154,7 +154,10 @@ func (q *QueryBuilder) WhereOp(name string, operator string) {
 	if operator == `` {
 		operator = `=`
 	}
-	operator = strings.TrimSpace(operator)
+	operator = strings.ToUpper(strings.TrimSpace(operator))
+	if operator == `LIKE` {
+		operator = ` LIKE `
+	}
 	where := name + operator + `?`
 	if operator == `text` {
 		where = `MATCH(` + name + `) AGAINST(? IN BOOLEAN MODE)`
