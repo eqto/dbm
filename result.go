@@ -17,20 +17,20 @@ type Result struct {
 
 //LastInsertID ...
 func (r *Result) LastInsertID() (ID int, e error) {
-	if id, e := r.result.LastInsertId(); e != nil {
+	id, e := r.result.LastInsertId()
+	if e != nil {
 		return 0, e
-	} else {
-		return int(id), e
 	}
+	return int(id), nil
 }
 
 //MustLastInsertID ...
 func (r *Result) MustLastInsertID() int {
-	if id, e := r.LastInsertID(); e != nil {
+	id, e := r.LastInsertID()
+	if e != nil {
 		panic(e)
-	} else {
-		return id
 	}
+	return id
 }
 
 //RowsAffected ...
@@ -39,7 +39,7 @@ func (r *Result) RowsAffected() (int, error) {
 	if e != nil {
 		return 0, e
 	}
-	return int(val), e
+	return int(val), nil
 }
 
 //MustRowsAffected ...

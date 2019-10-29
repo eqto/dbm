@@ -11,11 +11,12 @@ import (
 	"fmt"
 	"regexp"
 
+	//mysql driver ...
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
-	defaultCn          *Connection
+	lastCn             *Connection
 	regexStringColType *regexp.Regexp
 )
 
@@ -31,8 +32,8 @@ func NewConnection(host string, port int, username, password, databaseName strin
 		return nil, e
 	}
 
-	defaultCn = &Connection{db: db}
-	return defaultCn, nil
+	lastCn = &Connection{db: db}
+	return lastCn, nil
 }
 
 func getRegex() *regexp.Regexp {
