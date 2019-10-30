@@ -307,14 +307,27 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 			var val *float64
 			contents[i] = &val
 		case reflect.TypeOf(sql.RawBytes{}):
-			regex := getRegex()
-			if regex.Match([]byte(colType.DatabaseTypeName())) {
+				case reflect.TypeOf(sql.RawBytes{}):
+			switch colType.DatabaseTypeName() {
+			case `VARCHAR`:
+				fallthrough
+			case `TEXT`:
+				fallthrough
+			case `NVARCHAR`:
 				var val *string
 				contents[i] = &val
-			} else {
+			case `DECIMAL`:
+				var val *float64
+				contents[i] = &val
+			case `INT`:
+				var val *int64
+				contents[i] = &val
+			default:
 				var val []byte
 				contents[i] = &val
 			}
+
+	
 		case reflect.TypeOf(mysql.NullTime{}):
 			var val *time.Time
 			contents[i] = &val
