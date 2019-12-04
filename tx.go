@@ -311,6 +311,8 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 			contents[i] = &val
 		case reflect.TypeOf(sql.RawBytes{}):
 			switch colType.DatabaseTypeName() {
+			case `CHAR`:
+				fallthrough
 			case `VARCHAR`:
 				fallthrough
 			case `TEXT`:
