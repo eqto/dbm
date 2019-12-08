@@ -42,7 +42,7 @@ func (f *field) String() string {
 //Parse ...
 func Parse(query string) *QueryBuilder {
 	qb := QueryBuilder{}
-	regex := regexp.MustCompile(`(?Uis)^\s*SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)\s*$`)
+	regex := regexp.MustCompile(`(?Uis)^SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
 	matches := regex.FindStringSubmatch(query)
 
 	sorts := strings.Split(matches[4], `,`)
@@ -66,6 +66,13 @@ func Parse(query string) *QueryBuilder {
 	}
 	qb.fromParams = matches[2]
 	qb.splitColumns(matches[1])
+
+	if matches[5] != `` {
+		qb.limitStart, _ = strconv.Atoi(matches[5])
+	}
+	if matches[6] != `` {
+		qb.limitLength, _ = strconv.Atoi(matches[6])
+	}
 
 	return &qb
 }
@@ -144,6 +151,11 @@ func (q *QueryBuilder) Order(field string, order string) {
 func (q *QueryBuilder) Limit(start int, length int) {
 	q.limitLength = length
 	q.limitStart = start
+}
+
+//LimitStart ...
+func (q *QueryBuilder) LimitStart() int {
+	return q.limitStart
 }
 
 //WhereOp ...
