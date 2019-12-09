@@ -363,3 +363,11 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 	}
 	return contents
 }
+
+//Tx create new Tx when parameter tx is nil and the new Tx will have autocommit enabled. If parameter tx is not null then return tx from parameter
+func (c *Connection) Tx(tx *Tx) *Tx {
+	if tx == nil {
+		return &Tx{db: c.db}
+	}
+	return tx
+}

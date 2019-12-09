@@ -187,10 +187,3 @@ func (c *Connection) Close() error {
 	return c.db.Close()
 }
 
-//Tx create new Tx when parameter tx is nil
-func (c *Connection) Tx(tx *Tx) *Tx {
-	if tx == nil {
-		return &Tx{db: c.db}
-	}
-	return tx
-}

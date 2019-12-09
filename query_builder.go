@@ -18,7 +18,6 @@ type QueryBuilder struct {
 	fields []field
 	//field, alias
 	aliasMap map[string]string
-	// fieldMap map[string]string
 
 	whereParams []string
 	fromParams  string
@@ -39,45 +38,27 @@ func (f *field) String() string {
 	return f.name + ` AS ` + f.alias
 }
 
-//Parse ...
-func Parse(query string) *QueryBuilder {
-	qb := QueryBuilder{}
-	regex := regexp.MustCompile(`(?Uis)^SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
-	matches := regex.FindStringSubmatch(query)
-
-	sorts := strings.Split(matches[4], `,`)
+func (q *QueryBuilder) parseOrder(order string) {
+	sorts := strings.Split(order, `,`)
 	for _, val := range sorts {
 		if val != `` {
-			qb.orderParams = append(qb.orderParams, val)
+			q.orderParams = append(q.orderParams, val)
 		}
 	}
+}
 
-	regex = regexp.MustCompile(`(?is)\s+AND\s+`)
-	wheres := regex.Split(matches[3], -1)
+func (q *QueryBuilder) parseWhere(where string) {
+	regex := regexp.MustCompile(`(?is)\s+AND\s+`)
+	wheres := regex.Split(where, -1)
 
 	for _, val := range wheres {
 		if val != `` {
-			qb.whereParams = append(qb.whereParams, val)
+			q.whereParams = append(q.whereParams, val)
 		}
 	}
-
-	if len(matches) < 3 {
-		return nil
-	}
-	qb.fromParams = matches[2]
-	qb.splitColumns(matches[1])
-
-	if matches[5] != `` {
-		qb.limitStart, _ = strconv.Atoi(matches[5])
-	}
-	if matches[6] != `` {
-		qb.limitLength, _ = strconv.Atoi(matches[6])
-	}
-
-	return &qb
 }
 
-func (q *QueryBuilder) splitColumns(rawColumns string) {
+func (q *QueryBuilder) parseFields(rawColumns string) {
 	var buffer bytes.Buffer
 	var fields []string
 	sql := rawColumns
@@ -158,6 +139,11 @@ func (q *QueryBuilder) LimitStart() int {
 	return q.limitStart
 }
 
+//LimitLength ...
+func (q *QueryBuilder) LimitLength() int {
+	return q.limitLength
+}
+
 //WhereOp ...
 func (q *QueryBuilder) WhereOp(name string, operator string) {
 	if field, ok := q.aliasMap[name]; ok {
@@ -210,4 +196,31 @@ func (q *QueryBuilder) ToSQL() string {
 	buffer.WriteString(`SELECT ` + strFields + q.ToFromSQL() + q.ToConditionSQL())
 
 	return buffer.String()
+}
+
+//Parse ...
+func ParseQuery(query string) *QueryBuilder {
+	query = strings.TrimSpace(query)
+	qb := QueryBuilder{}
+	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
+		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
+		matches := regex.FindStringSubmatch(query)
+
+		if len(matches) < 3 {
+			return nil
+		}
+
+		qb.parseFields(matches[1])
+		qb.fromParams = matches[2]
+		qb.parseWhere(matches[3])
+		qb.parseOrder(matches[4])
+		if matches[5] != `` {
+			qb.limitStart, _ = strconv.Atoi(matches[5])
+		}
+		if matches[6] != `` {
+			qb.limitLength, _ = strconv.Atoi(matches[6])
+		}
+	}
+
+	return &qb
 }
