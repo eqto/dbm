@@ -93,10 +93,10 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	} else {
 		rows, e = t.tx.Query(query, params...)
 	}
-	defer rows.Close()
 	if e != nil {
 		return nil, e
 	}
+	defer rows.Close()
 
 	cols, e := rows.Columns()
 	colTypes, e := rows.ColumnTypes()
