@@ -224,3 +224,34 @@ func ParseQuery(query string) *QueryBuilder {
 
 	return &qb
 }
+
+//Parse ...
+func Parse(query string) *QueryBuilder {
+	qb := QueryBuilder{}
+	regex := regexp.MustCompile(`(?Uis)^\s*SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)\s*$`)
+	matches := regex.FindStringSubmatch(query)
+
+	sorts := strings.Split(matches[4], `,`)
+	for _, val := range sorts {
+		if val != `` {
+			qb.orderParams = append(qb.orderParams, val)
+		}
+	}
+
+	regex = regexp.MustCompile(`(?is)\s+AND\s+`)
+	wheres := regex.Split(matches[3], -1)
+
+	for _, val := range wheres {
+		if val != `` {
+			qb.whereParams = append(qb.whereParams, val)
+		}
+	}
+
+	if len(matches) < 3 {
+		return nil
+	}
+	qb.fromParams = matches[2]
+	qb.splitColumns(matches[1])
+
+	return &qb
+}
