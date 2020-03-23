@@ -17,6 +17,12 @@ import (
 //Connection ...
 type Connection struct {
 	db *sql.DB
+
+	Hostname string
+	Port     int
+	Username string
+	Password string
+	Name     string
 }
 
 //SetConnMaxLifetime ...
@@ -186,4 +192,3 @@ func (c *Connection) Close() error {
 	}
 	return c.db.Close()
 }
-
