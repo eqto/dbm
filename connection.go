@@ -25,6 +25,11 @@ type Connection struct {
 	Name     string
 }
 
+//Ping ...
+func (c *Connection) Ping() error {
+	return c.db.Ping()
+}
+
 //SetConnMaxLifetime ...
 func (c *Connection) SetConnMaxLifetime(duration time.Duration) {
 	c.db.SetConnMaxLifetime(duration)
