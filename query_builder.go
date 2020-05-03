@@ -19,8 +19,9 @@ type QueryBuilder struct {
 	//field, alias
 	aliasMap map[string]string
 
-	whereParams []string
 	fromParams  string
+	whereParams []string
+	groupParams []string
 	orderParams []string
 	limitStart  int
 	limitLength int
@@ -38,15 +39,6 @@ func (f *field) String() string {
 	return f.name + ` AS ` + f.alias
 }
 
-func (q *QueryBuilder) parseOrder(order string) {
-	sorts := strings.Split(order, `,`)
-	for _, val := range sorts {
-		if val != `` {
-			q.orderParams = append(q.orderParams, val)
-		}
-	}
-}
-
 func (q *QueryBuilder) parseWhere(where string) {
 	regex := regexp.MustCompile(`(?is)\s+AND\s+`)
 	wheres := regex.Split(where, -1)
@@ -54,6 +46,30 @@ func (q *QueryBuilder) parseWhere(where string) {
 	for _, val := range wheres {
 		if val != `` {
 			q.whereParams = append(q.whereParams, val)
+		}
+	}
+}
+
+func (q *QueryBuilder) parseGroup(group string) {
+	regex := regexp.MustCompile(`(?is)([^\s]+)(?:\s+([^\s]+)|)(?:,|$)`)
+	groups := regex.FindAllStringSubmatch(group, -1)
+
+	for _, val := range groups {
+		if val[1] != `` {
+			order := strings.ToUpper(val[2])
+			if order == `` {
+				order = `ASC`
+			}
+			q.groupParams = append(q.groupParams, val[1]+` `+order)
+		}
+	}
+}
+
+func (q *QueryBuilder) parseOrder(order string) {
+	sorts := strings.Split(order, `,`)
+	for _, val := range sorts {
+		if val != `` {
+			q.orderParams = append(q.orderParams, val)
 		}
 	}
 }
@@ -157,9 +173,11 @@ func (q *QueryBuilder) WhereOp(name string, operator string) {
 		operator = ` LIKE `
 	}
 	where := name + operator + `?`
-	if operator == `text` {
+
+	if operator == `FULLTEXT` {
 		where = `MATCH(` + name + `) AGAINST(? IN BOOLEAN MODE)`
 	}
+
 	q.whereParams = append(q.whereParams, where)
 }
 
@@ -168,6 +186,9 @@ func (q *QueryBuilder) ToConditionSQL() string {
 	var buffer bytes.Buffer
 	if len(q.whereParams) > 0 {
 		buffer.WriteString(` WHERE ` + strings.Join(q.whereParams, ` AND `))
+	}
+	if len(q.groupParams) > 0 {
+		buffer.WriteString(` GROUP BY ` + strings.Join(q.groupParams, `, `))
 	}
 	if len(q.orderParams) > 0 {
 		buffer.WriteString(` ORDER BY ` + strings.Join(q.orderParams, `, `))
@@ -198,12 +219,12 @@ func (q *QueryBuilder) ToSQL() string {
 	return buffer.String()
 }
 
-//Parse ...
+//ParseQuery ...
 func ParseQuery(query string) *QueryBuilder {
 	query = strings.TrimSpace(query)
 	qb := QueryBuilder{}
 	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
-		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
+		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
 		matches := regex.FindStringSubmatch(query)
 
 		if len(matches) < 3 {
@@ -213,7 +234,8 @@ func ParseQuery(query string) *QueryBuilder {
 		qb.parseFields(matches[1])
 		qb.fromParams = matches[2]
 		qb.parseWhere(matches[3])
-		qb.parseOrder(matches[4])
+		qb.parseGroup(matches[4])
+		qb.parseOrder(matches[5])
 		if matches[5] != `` {
 			qb.limitStart, _ = strconv.Atoi(matches[5])
 		}
@@ -271,6 +293,7 @@ func (q *QueryBuilder) splitColumns(rawColumns string) {
 		q.fields = append(q.fields, field)
 	}
 }
+
 //Parse ...
 func Parse(query string) *QueryBuilder {
 	qb := QueryBuilder{}
@@ -301,4 +324,3 @@ func Parse(query string) *QueryBuilder {
 
 	return &qb
 }
-

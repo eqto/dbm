@@ -1,4 +1,2 @@
-github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
-github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
-gitlab.com/tuxer/go-logger v0.0.0-20181117123619-174e86aaabc1 h1:rmOiyoU2+LPgeO2hsitfwAo8wq2JXZJaGUha1UqW13A=
-gitlab.com/tuxer/go-logger v0.0.0-20181117123619-174e86aaabc1/go.mod h1:8g/WKZHA3GBfOBRf/A4vABO1Er0KscBbEeUBSMeorQc=
+github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
+github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
