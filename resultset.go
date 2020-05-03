@@ -172,6 +172,14 @@ func (r Resultset) StringNil(name string) *string {
 	return nil
 }
 
+//Interface ...
+func (r Resultset) Interface(name string) interface{} {
+	if val := r.getValue(name); val != nil {
+		return val.Interface()
+	}
+	return nil
+}
+
 //Bytes ...
 func (r Resultset) Bytes(name string) []byte {
 	if val := r.getValue(name); val != nil {
