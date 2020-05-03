@@ -44,11 +44,8 @@ func (t *Tx) Recover() {
 
 //Commit ...
 func (t *Tx) Commit() error {
-	if t.tx == nil {
+	if t.tx == nil || t.finish {
 		return nil
-	}
-	if t.finish {
-		return errors.New(`unable to commit, transaction already finish`)
 	}
 	t.finish = true
 	return t.tx.Commit()
@@ -56,11 +53,8 @@ func (t *Tx) Commit() error {
 
 //Rollback ...
 func (t *Tx) Rollback() error {
-	if t.tx == nil {
+	if t.tx == nil || t.finish {
 		return nil
-	}
-	if t.finish {
-		return errors.New(`unable to rollback, transaction already finish`)
 	}
 	t.finish = true
 	return t.tx.Rollback()
@@ -325,6 +319,9 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 				contents[i] = &val
 			case `INT`:
 				var val *int64
+				contents[i] = &val
+			case `JSON`:
+				var val *string
 				contents[i] = &val
 			default:
 				var val []byte
