@@ -51,7 +51,7 @@ func (q *QueryBuilder) parseWhere(where string) {
 }
 
 func (q *QueryBuilder) parseGroup(group string) {
-	regex := regexp.MustCompile(`(?is)([^\s]+)(?:\s+([^\s]+)|)(?:,|$)`)
+	regex := regexp.MustCompile(`(?is)([a-z0-9._]+)(?:\s+([^\s]+)|)\s*(?:,|$)`)
 	groups := regex.FindAllStringSubmatch(group, -1)
 
 	for _, val := range groups {
