@@ -311,6 +311,8 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 				fallthrough
 			case `TEXT`:
 				fallthrough
+			case `MEDIUMTEXT`:
+				fallthrough
 			case `NVARCHAR`:
 				var val *string
 				contents[i] = &val
