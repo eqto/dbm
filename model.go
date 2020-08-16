@@ -1,9 +1,3 @@
-/**
-* Created by Visual Studio Code.
-* User: tuxer
-* Created At: 2019-10-29 11:26:52
-**/
-
 package db
 
 import "errors"

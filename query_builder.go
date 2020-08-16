@@ -1,9 +1,3 @@
-/**
-* Created by Visual Studio Code.
-* User: tuxer
-* Created At: 2017-12-17 11:23:27
- */
-
 package db
 
 import (
