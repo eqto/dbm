@@ -12,7 +12,7 @@ var (
 )
 
 //NewConnection ...
-func NewConnection(host string, port int, username, password, name string) (*Connection, error) {
+func NewConnection(host string, port uint16, username, password, name string) (*Connection, error) {
 	db, e := sql.Open(`mysql`,
 		fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`, username, password, host, port, name))
 

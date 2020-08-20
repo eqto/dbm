@@ -13,7 +13,7 @@ type Connection struct {
 	db *sql.DB
 
 	Hostname string
-	Port     int
+	Port     uint16
 	Username string
 	Password string
 	Name     string
