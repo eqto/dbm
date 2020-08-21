@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"database/sql"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -17,6 +18,20 @@ type Connection struct {
 	Username string
 	Password string
 	Name     string
+}
+
+//Connect ...
+func (c *Connection) Connect() error {
+	db, e := sql.Open(`mysql`,
+		fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`, c.Username, c.Password, c.Hostname, c.Port, c.Name))
+	if e != nil {
+		return e
+	}
+	if e := db.Ping(); e != nil {
+		return e
+	}
+	c.db = db
+	return nil
 }
 
 //Ping ...

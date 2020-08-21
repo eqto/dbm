@@ -1,8 +1,6 @@
 package db
 
 import (
-	"database/sql"
-	"fmt"
 	"regexp"
 )
 
@@ -13,18 +11,18 @@ var (
 
 //NewConnection ...
 func NewConnection(host string, port uint16, username, password, name string) (*Connection, error) {
-	db, e := sql.Open(`mysql`,
-		fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`, username, password, host, port, name))
-
-	if e != nil {
+	cn := NewEmptyConnection(host, port, username, password, name)
+	if e := cn.Connect(); e != nil {
 		return nil, e
 	}
-	if e := db.Ping(); e != nil {
-		return nil, e
-	}
+	lastCn = cn
+	return cn, nil
+}
 
-	lastCn = &Connection{db: db, Hostname: host, Port: port, Username: username, Password: password, Name: name}
-	return lastCn, nil
+//NewEmptyConnection ...
+func NewEmptyConnection(host string, port uint16, username, password, name string) *Connection {
+	lastCn = &Connection{Hostname: host, Port: port, Username: username, Password: password, Name: name}
+	return lastCn
 }
 
 func getRegex() *regexp.Regexp {
