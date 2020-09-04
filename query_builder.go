@@ -21,16 +21,37 @@ type QueryBuilder struct {
 	limitLength int
 }
 
-type field struct {
-	name, alias string
-}
-
-//String ...
-func (f *field) String() string {
-	if f.alias == `` {
-		return f.name
+//Clone ...
+func (q *QueryBuilder) Clone() *QueryBuilder {
+	clone := &QueryBuilder{
+		fromParams:  q.fromParams,
+		limitStart:  q.limitStart,
+		limitLength: q.limitLength,
 	}
-	return f.name + ` AS ` + f.alias
+	if q.fields != nil {
+		clone.fields = make([]field, len(q.fields))
+		copy(clone.fields, q.fields)
+	}
+	if q.aliasMap != nil {
+		clone.aliasMap = make(map[string]string)
+		for key, val := range q.aliasMap {
+			clone.aliasMap[key] = val
+		}
+	}
+
+	if q.whereParams != nil {
+		clone.whereParams = make([]string, len(q.whereParams))
+		copy(clone.whereParams, q.whereParams)
+	}
+	if q.groupParams != nil {
+		clone.groupParams = make([]string, len(q.groupParams))
+		copy(clone.groupParams, q.groupParams)
+	}
+	if q.orderParams != nil {
+		clone.orderParams = make([]string, len(q.orderParams))
+		copy(clone.orderParams, q.orderParams)
+	}
+	return clone
 }
 
 func (q *QueryBuilder) parseWhere(where string) {
