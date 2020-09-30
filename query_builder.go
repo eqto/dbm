@@ -244,7 +244,7 @@ func ParseQuery(query string) *QueryBuilder {
 	query = strings.TrimSpace(query)
 	qb := QueryBuilder{}
 	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
-		regex := regexp.MustCompile(`(?Uis)^SELECT\s*(SQL_CALC_FOUND_ROWS|)\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
+		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(SQL_CALC_FOUND_ROWS\s+|)(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
 		matches := regex.FindStringSubmatch(query)
 
 		if len(matches) < 4 {
@@ -312,35 +312,4 @@ func (q *QueryBuilder) splitColumns(rawColumns string) {
 		}
 		q.fields = append(q.fields, field)
 	}
-}
-
-//Parse ...
-func Parse(query string) *QueryBuilder {
-	qb := QueryBuilder{}
-	regex := regexp.MustCompile(`(?Uis)^\s*SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)\s*$`)
-	matches := regex.FindStringSubmatch(query)
-
-	sorts := strings.Split(matches[4], `,`)
-	for _, val := range sorts {
-		if val != `` {
-			qb.orderParams = append(qb.orderParams, val)
-		}
-	}
-
-	regex = regexp.MustCompile(`(?is)\s+AND\s+`)
-	wheres := regex.Split(matches[3], -1)
-
-	for _, val := range wheres {
-		if val != `` {
-			qb.whereParams = append(qb.whereParams, val)
-		}
-	}
-
-	if len(matches) < 3 {
-		return nil
-	}
-	qb.fromParams = matches[2]
-	qb.splitColumns(matches[1])
-
-	return &qb
 }
