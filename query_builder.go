@@ -9,7 +9,8 @@ import (
 
 //QueryBuilder ...
 type QueryBuilder struct {
-	fields []field
+	selectOptions string
+	fields        []field
 	//field, alias
 	aliasMap map[string]string
 
@@ -229,7 +230,11 @@ func (q *QueryBuilder) ToSQL() string {
 
 	strFields := strings.Join(sqlFields, `, `)
 	var buffer bytes.Buffer
-	buffer.WriteString(`SELECT ` + strFields + q.ToFromSQL() + q.ToConditionSQL())
+	selectOptions := q.selectOptions
+	if selectOptions != `` {
+		selectOptions = selectOptions + ` `
+	}
+	buffer.WriteString(`SELECT ` + q.selectOptions + strFields + q.ToFromSQL() + q.ToConditionSQL())
 
 	return buffer.String()
 }
@@ -239,23 +244,23 @@ func ParseQuery(query string) *QueryBuilder {
 	query = strings.TrimSpace(query)
 	qb := QueryBuilder{}
 	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
-		regex := regexp.MustCompile(`(?Uis)^SELECT(?:\s+SQL_CALC_FOUND_ROWS|)\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
+		regex := regexp.MustCompile(`(?Uis)^SELECT\s*(SQL_CALC_FOUND_ROWS|)\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
 		matches := regex.FindStringSubmatch(query)
 
-		if len(matches) < 3 {
+		if len(matches) < 4 {
 			return nil
 		}
-
-		qb.parseFields(matches[1])
-		qb.fromParams = matches[2]
-		qb.parseWhere(matches[3])
-		qb.parseGroup(matches[4])
-		qb.parseOrder(matches[5])
-		if matches[5] != `` {
-			qb.limitStart, _ = strconv.Atoi(matches[5])
-		}
+		qb.selectOptions = matches[1]
+		qb.parseFields(matches[2])
+		qb.fromParams = matches[3]
+		qb.parseWhere(matches[4])
+		qb.parseGroup(matches[5])
+		qb.parseOrder(matches[6])
 		if matches[6] != `` {
-			qb.limitLength, _ = strconv.Atoi(matches[6])
+			qb.limitStart, _ = strconv.Atoi(matches[6])
+		}
+		if matches[7] != `` {
+			qb.limitLength, _ = strconv.Atoi(matches[7])
 		}
 	}
 
