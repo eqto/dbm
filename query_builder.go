@@ -239,7 +239,7 @@ func ParseQuery(query string) *QueryBuilder {
 	query = strings.TrimSpace(query)
 	qb := QueryBuilder{}
 	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
-		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
+		regex := regexp.MustCompile(`(?Uis)^SELECT(?:\s+SQL_CALC_FOUND_ROWS|)\s+(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
 		matches := regex.FindStringSubmatch(query)
 
 		if len(matches) < 3 {
