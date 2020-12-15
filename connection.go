@@ -13,6 +13,7 @@ import (
 type Connection struct {
 	db *sql.DB
 
+	driver   string
 	Hostname string
 	Port     uint16
 	Username string

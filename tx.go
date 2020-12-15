@@ -7,8 +7,6 @@ import (
 	"reflect"
 	"strings"
 	"time"
-
-	"github.com/go-sql-driver/mysql"
 )
 
 //Tx ...
@@ -294,9 +292,9 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 		case reflect.TypeOf(sql.NullFloat64{}):
 			var val *float64
 			contents[i] = &val
-		case reflect.TypeOf(mysql.NullTime{}):
-			var val *time.Time
-			contents[i] = &val
+		// case reflect.TypeOf(mysql.NullTime{}):
+		// 	var val *time.Time
+		// 	contents[i] = &val
 		case reflect.TypeOf(sql.RawBytes{}):
 			switch colType.DatabaseTypeName() {
 			case `CHAR`:
