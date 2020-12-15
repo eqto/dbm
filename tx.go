@@ -285,73 +285,92 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 	contents := make([]interface{}, len(cols))
 	for i := 0; i < len(colTypes); i++ {
 		colType := colTypes[i]
-		switch scanType := colType.ScanType(); scanType {
-		case reflect.TypeOf(sql.NullInt64{}):
+		switch colType.ScanType().Kind() {
+		case reflect.String:
+			var val *string
+			contents[i] = &val
+		case reflect.Int64:
+			fallthrough
+		case reflect.Int32:
+			fallthrough
+		case reflect.Int16:
+			fallthrough
+		case reflect.Int8:
+			fallthrough
+		case reflect.Int:
 			var val *int64
 			contents[i] = &val
-		case reflect.TypeOf(sql.NullFloat64{}):
-			var val *float64
-			contents[i] = &val
-			//TODO null mysql
-		// case reflect.TypeOf(mysql.NullTime{}):
-		// 	var val *time.Time
-		// 	contents[i] = &val
-		case reflect.TypeOf(sql.RawBytes{}):
-			switch colType.DatabaseTypeName() {
-			case `CHAR`:
-				fallthrough
-			case `VARCHAR`:
-				fallthrough
-			case `TEXT`:
-				fallthrough
-			case `MEDIUMTEXT`:
-				fallthrough
-			case `NVARCHAR`:
-				var val *string
-				contents[i] = &val
-			case `DECIMAL`:
-				var val *float64
-				contents[i] = &val
-			case `INT`:
-				var val *int64
-				contents[i] = &val
-			case `JSON`:
-				var val *string
-				contents[i] = &val
-			default:
-				var val []byte
-				contents[i] = &val
-			}
+
 		default:
-			switch scanType.Kind() {
-			case reflect.Uint64:
-				fallthrough
-			case reflect.Uint32:
-				fallthrough
-			case reflect.Uint16:
-				fallthrough
-			case reflect.Uint8:
-				var val *uint64
-				contents[i] = &val
-			case reflect.Int64:
-				fallthrough
-			case reflect.Int32:
-				fallthrough
-			case reflect.Int16:
-				fallthrough
-			case reflect.Int8:
+			switch scanType := colType.ScanType(); scanType {
+			case reflect.TypeOf(sql.NullInt64{}):
 				var val *int64
 				contents[i] = &val
-			case reflect.Float64:
-				fallthrough
-			case reflect.Float32:
+			case reflect.TypeOf(sql.NullFloat64{}):
 				var val *float64
 				contents[i] = &val
+				//TODO null mysql
+			// case reflect.TypeOf(mysql.NullTime{}):
+			// 	var val *time.Time
+			// 	contents[i] = &val
+			case reflect.TypeOf(sql.RawBytes{}):
+				switch colType.DatabaseTypeName() {
+				case `CHAR`:
+					fallthrough
+				case `VARCHAR`:
+					fallthrough
+				case `TEXT`:
+					fallthrough
+				case `MEDIUMTEXT`:
+					fallthrough
+				case `NVARCHAR`:
+					var val *string
+					contents[i] = &val
+				case `DECIMAL`:
+					var val *float64
+					contents[i] = &val
+				case `INT`:
+					var val *int64
+					contents[i] = &val
+				case `JSON`:
+					var val *string
+					contents[i] = &val
+				default:
+					var val []byte
+					contents[i] = &val
+				}
 			default:
-				println(cols[i] + `:` + colType.ScanType().String())
-				contents[i] = &contents[i]
+				switch scanType.Kind() {
+				case reflect.Uint64:
+					fallthrough
+				case reflect.Uint32:
+					fallthrough
+				case reflect.Uint16:
+					fallthrough
+				case reflect.Uint8:
+					var val *uint64
+					contents[i] = &val
+				case reflect.Int64:
+					fallthrough
+				case reflect.Int32:
+					fallthrough
+				case reflect.Int16:
+					fallthrough
+				case reflect.Int8:
+					var val *int64
+					contents[i] = &val
+				case reflect.Float64:
+					fallthrough
+				case reflect.Float32:
+					var val *float64
+					contents[i] = &val
+				default:
+					println(cols[i] + `:` + colType.ScanType().String())
+					contents[i] = &contents[i]
+				}
 			}
 		}
+
 	}
 	return contents
 }
