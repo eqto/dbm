@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	log "github.com/eqto/go-logger"
 )
 
 //Tx ...
@@ -74,6 +76,7 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	var rows *sql.Rows
 	var e error
+	log.D(query)
 	if t.tx == nil {
 		rows, e = t.db.Query(query, params...)
 	} else {

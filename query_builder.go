@@ -14,12 +14,18 @@ type QueryBuilder struct {
 	//field, alias
 	aliasMap map[string]string
 
+	driver      string
 	fromParams  string
 	whereParams []string
 	groupParams []string
 	orderParams []string
 	limitStart  int
 	limitLength int
+}
+
+//SetDriver ..
+func (q *QueryBuilder) SetDriver(driver string) {
+	q.driver = driver
 }
 
 //Clone ...
@@ -209,7 +215,7 @@ func (q *QueryBuilder) ToConditionSQL() string {
 	if len(q.orderParams) > 0 {
 		buffer.WriteString(` ORDER BY ` + strings.Join(q.orderParams, `, `))
 	}
-	if q.limitLength > 0 {
+	if q.driver == `mysql` && q.limitLength > 0 {
 		buffer.WriteString(` LIMIT ` + strconv.Itoa(q.limitStart) + `, ` + strconv.Itoa(q.limitLength))
 	}
 
@@ -237,34 +243,6 @@ func (q *QueryBuilder) ToSQL() string {
 	buffer.WriteString(`SELECT ` + q.selectOptions + strFields + q.ToFromSQL() + q.ToConditionSQL())
 
 	return buffer.String()
-}
-
-//ParseQuery ...
-func ParseQuery(query string) *QueryBuilder {
-	query = strings.TrimSpace(query)
-	qb := QueryBuilder{}
-	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
-		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(SQL_CALC_FOUND_ROWS\s+|)(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
-		matches := regex.FindStringSubmatch(query)
-
-		if len(matches) < 4 {
-			return nil
-		}
-		qb.selectOptions = matches[1]
-		qb.parseFields(matches[2])
-		qb.fromParams = matches[3]
-		qb.parseWhere(matches[4])
-		qb.parseGroup(matches[5])
-		qb.parseOrder(matches[6])
-		if matches[6] != `` {
-			qb.limitStart, _ = strconv.Atoi(matches[6])
-		}
-		if matches[7] != `` {
-			qb.limitLength, _ = strconv.Atoi(matches[7])
-		}
-	}
-
-	return &qb
 }
 
 func (q *QueryBuilder) splitColumns(rawColumns string) {
@@ -312,4 +290,32 @@ func (q *QueryBuilder) splitColumns(rawColumns string) {
 		}
 		q.fields = append(q.fields, field)
 	}
+}
+
+//ParseQuery ...
+func ParseQuery(query string) *QueryBuilder {
+	query = strings.TrimSpace(query)
+	qb := QueryBuilder{driver: `mysql`}
+	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
+		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(SQL_CALC_FOUND_ROWS\s+|)(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
+		matches := regex.FindStringSubmatch(query)
+
+		if len(matches) < 4 {
+			return nil
+		}
+		qb.selectOptions = matches[1]
+		qb.parseFields(matches[2])
+		qb.fromParams = matches[3]
+		qb.parseWhere(matches[4])
+		qb.parseGroup(matches[5])
+		qb.parseOrder(matches[6])
+		if matches[6] != `` {
+			qb.limitStart, _ = strconv.Atoi(matches[6])
+		}
+		if matches[7] != `` {
+			qb.limitLength, _ = strconv.Atoi(matches[7])
+		}
+	}
+
+	return &qb
 }
