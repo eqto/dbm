@@ -292,6 +292,7 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 		case reflect.TypeOf(sql.NullFloat64{}):
 			var val *float64
 			contents[i] = &val
+			//TODO null mysql
 		// case reflect.TypeOf(mysql.NullTime{}):
 		// 	var val *time.Time
 		// 	contents[i] = &val

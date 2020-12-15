@@ -9,11 +9,13 @@ import (
 	"time"
 )
 
+var lastCn *Connection
+
 //Connection ...
 type Connection struct {
 	db *sql.DB
 
-	driver   string
+	Driver   string
 	Hostname string
 	Port     uint16
 	Username string
@@ -206,4 +208,25 @@ func (c *Connection) Close() error {
 		return nil
 	}
 	return c.db.Close()
+}
+
+//Connect ...
+func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {
+	cn, e := NewConnection(driver, host, port, username, password, name)
+	if e != nil {
+		return nil, e
+	}
+	if e := cn.Connect(); e != nil {
+		return nil, e
+	}
+	lastCn = cn
+	return cn, nil
+}
+
+//NewConnection ..
+func NewConnection(driver, host string, port int, username, password, name string) (*Connection, error) {
+	if port < 0 || port > 65535 {
+		return nil, fmt.Errorf(`invalid port %d`, port)
+	}
+	return &Connection{Driver: driver, Hostname: host, Port: uint16(port), Username: username, Password: password, Name: name}, nil
 }
