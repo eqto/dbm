@@ -3,7 +3,9 @@ package db
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -25,8 +27,28 @@ type Connection struct {
 
 //Connect ...
 func (c *Connection) Connect() error {
-	db, e := sql.Open(`mysql`,
-		fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`, c.Username, c.Password, c.Hostname, c.Port, c.Name))
+	cnStr := ``
+	switch c.Driver {
+	case `sqlserver`:
+		u := &url.URL{
+			Scheme:   c.Driver,
+			User:     url.UserPassword(c.Username, c.Password),
+			Host:     fmt.Sprintf("%s:%d", c.Hostname, c.Port),
+			RawQuery: c.Name,
+		}
+		cnStr = u.String()
+	case `mysql`:
+		cnStr = fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
+			c.Username, c.Password,
+			c.Hostname, c.Port,
+			c.Name,
+		)
+
+	}
+	if cnStr == `` {
+		return errors.New(`Database driver not supported yet: ` + c.Driver)
+	}
+	db, e := sql.Open(c.Driver, cnStr)
 	if e != nil {
 		return e
 	}
