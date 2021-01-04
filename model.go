@@ -13,7 +13,7 @@ func (m *Model) GetTx() (*Tx, error) {
 		if lastCn.db == nil {
 			return nil, errors.New(`no connection available`)
 		}
-		m.tx = &Tx{db: lastCn.db}
+		m.tx = &Tx{cn: lastCn}
 	}
 	return m.tx, nil
 }

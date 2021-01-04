@@ -232,6 +232,25 @@ func (c *Connection) Close() error {
 	return c.db.Close()
 }
 
+//Tx create new Tx when parameter tx is nil and the new Tx will have autocommit enabled. If parameter tx is not null then return tx from parameter
+func (c *Connection) Tx(tx *Tx) *Tx {
+	if tx == nil {
+		return &Tx{cn: c}
+	}
+	return tx
+}
+
+func (c *Connection) wrapMsgErr(msg string) SQLError {
+	return &sqlError{msg: msg}
+}
+
+func (c *Connection) wrapErr(e error) SQLError {
+	if e == nil {
+		return nil
+	}
+	return &sqlError{msg: e.Error()}
+}
+
 //Connect ...
 func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {
 	cn, e := NewConnection(driver, host, port, username, password, name)

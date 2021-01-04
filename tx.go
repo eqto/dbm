@@ -11,7 +11,7 @@ import (
 
 //Tx ...
 type Tx struct {
-	db     *sql.DB
+	cn     *Connection
 	tx     *sql.Tx
 	finish bool
 }
@@ -75,22 +75,22 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 	var rows *sql.Rows
 	var e error
 	if t.tx == nil {
-		rows, e = t.db.Query(query, params...)
+		rows, e = t.cn.db.Query(query, params...)
 	} else {
 		rows, e = t.tx.Query(query, params...)
 	}
 	if e != nil {
-		return nil, wrapErr(e)
+		return nil, t.cn.wrapErr(e)
 	}
 	defer rows.Close()
 
 	cols, e := rows.Columns()
 	if e != nil {
-		return nil, wrapErr(e)
+		return nil, t.cn.wrapErr(e)
 	}
 	colTypes, e := rows.ColumnTypes()
 	if e != nil {
-		return nil, wrapErr(e)
+		return nil, t.cn.wrapErr(e)
 	}
 
 	var results []Resultset
@@ -101,7 +101,7 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		if e != nil {
 			println(e.Error())
 			rows.Close()
-			return nil, wrapErr(e)
+			return nil, t.cn.wrapErr(e)
 		}
 		rs := Resultset{}
 		for key, val := range cols {
@@ -128,7 +128,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 
 	rs, e := t.Select(query, params...)
 	if e != nil {
-		return wrapErr(e)
+		return t.cn.wrapErr(e)
 	}
 
 	if len(rs) == 0 {
@@ -151,7 +151,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 	rs, e := t.Select(query, params...)
 	if e != nil || rs == nil {
-		return nil, wrapErr(e)
+		return nil, t.cn.wrapErr(e)
 	}
 	return rs[0], nil
 }
@@ -237,7 +237,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 		return e
 	}
 	if rs == nil || len(rs) == 0 {
-		return wrapMsgErr(`record not found`)
+		return t.cn.wrapMsgErr(`record not found`)
 	}
 
 	typeOf = typeOf.Elem()
@@ -249,15 +249,15 @@ func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
 	var res sql.Result
 	var e error
 	if t.tx == nil {
-		res, e = t.db.Exec(query, params...)
+		res, e = t.cn.db.Exec(query, params...)
 	} else {
 		res, e = t.tx.Exec(query, params...)
 	}
 	if e != nil {
-		return nil, wrapErr(e)
+		return nil, t.cn.wrapErr(e)
 	}
 
-	return &Result{result: res}, wrapErr(e)
+	return &Result{result: res}, t.cn.wrapErr(e)
 }
 
 //MustExec ...
@@ -381,12 +381,4 @@ func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
 
 	}
 	return contents
-}
-
-//Tx create new Tx when parameter tx is nil and the new Tx will have autocommit enabled. If parameter tx is not null then return tx from parameter
-func (c *Connection) Tx(tx *Tx) *Tx {
-	if tx == nil {
-		return &Tx{db: c.db}
-	}
-	return tx
 }

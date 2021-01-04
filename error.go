@@ -44,14 +44,3 @@ func (e *sqlError) Kind() int {
 	}
 	return ErrOther
 }
-
-func wrapMsgErr(msg string) SQLError {
-	return &sqlError{msg: msg}
-}
-
-func wrapErr(e error) SQLError {
-	if e == nil {
-		return nil
-	}
-	return &sqlError{msg: e.Error()}
-}
