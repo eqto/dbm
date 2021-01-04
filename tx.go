@@ -80,12 +80,18 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		rows, e = t.tx.Query(query, params...)
 	}
 	if e != nil {
-		return nil, e
+		return nil, wrapErr(e)
 	}
 	defer rows.Close()
 
 	cols, e := rows.Columns()
+	if e != nil {
+		return nil, wrapErr(e)
+	}
 	colTypes, e := rows.ColumnTypes()
+	if e != nil {
+		return nil, wrapErr(e)
+	}
 
 	var results []Resultset
 
@@ -95,7 +101,7 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		if e != nil {
 			println(e.Error())
 			rows.Close()
-			return nil, e
+			return nil, wrapErr(e)
 		}
 		rs := Resultset{}
 		for key, val := range cols {
@@ -110,11 +116,8 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 
 //SelectStruct ...
 func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{}) error {
-	rs, e := t.Select(query, params...)
-	if e != nil {
-		return e
-	}
 	typeOf := reflect.TypeOf(dest)
+
 	if typeOf.Kind() != reflect.Ptr {
 		return errors.New(`dest is not a pointer`)
 	}
@@ -123,13 +126,18 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 		return errors.New(`dest is not a slice`)
 	}
 
-	slice := reflect.MakeSlice(typeOf, 0, len(rs))
+	rs, e := t.Select(query, params...)
+	if e != nil {
+		return wrapErr(e)
+	}
+
 	if len(rs) == 0 {
 		return nil
 	}
 	elType := typeOf.Elem()
 	fieldMap := t.createFieldMap(elType)
 
+	slice := reflect.MakeSlice(typeOf, 0, len(rs))
 	for _, val := range rs {
 		el := reflect.New(elType)
 		t.assignStruct(el.Interface(), fieldMap, val, elType)
@@ -143,7 +151,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 	rs, e := t.Select(query, params...)
 	if e != nil || rs == nil {
-		return nil, e
+		return nil, wrapErr(e)
 	}
 	return rs[0], nil
 }
@@ -229,7 +237,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 		return e
 	}
 	if rs == nil || len(rs) == 0 {
-		return errors.New(`record not found`)
+		return wrapMsgErr(`record not found`)
 	}
 
 	typeOf = typeOf.Elem()
@@ -246,10 +254,10 @@ func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
 		res, e = t.tx.Exec(query, params...)
 	}
 	if e != nil {
-		return nil, e
+		return nil, wrapErr(e)
 	}
 
-	return &Result{result: res}, e
+	return &Result{result: res}, wrapErr(e)
 }
 
 //MustExec ...
