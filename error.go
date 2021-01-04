@@ -12,7 +12,7 @@ const (
 
 var (
 	duplicateMysql = regexp.MustCompile(`^Duplicate entry.*`)
-	duplicateMsSQL = regexp.MustCompile(`^Cannot insert duplicate key.*`)
+	duplicateMsSQL = regexp.MustCompile(`^mssql: Cannot insert duplicate key.*`)
 )
 
 //SQLError ..
