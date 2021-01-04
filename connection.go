@@ -241,14 +241,14 @@ func (c *Connection) Tx(tx *Tx) *Tx {
 }
 
 func (c *Connection) wrapMsgErr(msg string) SQLError {
-	return &sqlError{msg: msg}
+	return &sqlError{driver: c.Driver, msg: msg}
 }
 
 func (c *Connection) wrapErr(e error) SQLError {
 	if e == nil {
 		return nil
 	}
-	return &sqlError{msg: e.Error()}
+	return &sqlError{driver: c.Driver, msg: e.Error()}
 }
 
 //Connect ...
