@@ -85,7 +85,7 @@ func (c *Connection) Begin() (*Tx, error) {
 	if e != nil {
 		return nil, e
 	}
-	return &Tx{tx: tx}, nil
+	return &Tx{cn: c, tx: tx}, nil
 }
 
 //MustBegin ...
