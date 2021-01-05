@@ -14,18 +14,13 @@ type QueryBuilder struct {
 	//field, alias
 	aliasMap map[string]string
 
-	driver      string
+	driverKind  string
 	fromParams  string
 	whereParams []string
 	groupParams []string
 	orderParams []string
 	limitStart  int
 	limitLength int
-}
-
-//SetDriver ..
-func (q *QueryBuilder) SetDriver(driver string) {
-	q.driver = driver
 }
 
 //Clone ...
@@ -215,7 +210,7 @@ func (q *QueryBuilder) ToConditionSQL() string {
 	if len(q.orderParams) > 0 {
 		buffer.WriteString(` ORDER BY ` + strings.Join(q.orderParams, `, `))
 	}
-	if q.driver == `mysql` && q.limitLength > 0 {
+	if q.driverKind == `mysql` && q.limitLength > 0 {
 		buffer.WriteString(` LIMIT ` + strconv.Itoa(q.limitStart) + `, ` + strconv.Itoa(q.limitLength))
 	}
 
@@ -295,7 +290,7 @@ func (q *QueryBuilder) splitColumns(rawColumns string) {
 //ParseQuery ...
 func ParseQuery(query string) *QueryBuilder {
 	query = strings.TrimSpace(query)
-	qb := QueryBuilder{driver: `mysql`}
+	qb := QueryBuilder{driverKind: `mysql`}
 	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
 		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(SQL_CALC_FOUND_ROWS\s+|)(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
 		matches := regex.FindStringSubmatch(query)

@@ -3,9 +3,7 @@ package db
 import (
 	"bytes"
 	"database/sql"
-	"errors"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -17,37 +15,12 @@ var lastCn *Connection
 type Connection struct {
 	db *sql.DB
 
-	Driver   string
-	Hostname string
-	Port     uint16
-	Username string
-	Password string
-	Name     string
+	driver driver
 }
 
 //Connect ...
 func (c *Connection) Connect() error {
-	cnStr := ``
-	switch c.Driver {
-	case DriverMySQL:
-		cnStr = fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
-			c.Username, c.Password,
-			c.Hostname, c.Port,
-			c.Name,
-		)
-	case DriverSQLServer:
-		u := &url.URL{
-			Scheme:   c.Driver,
-			User:     url.UserPassword(c.Username, c.Password),
-			Host:     fmt.Sprintf("%s:%d", c.Hostname, c.Port),
-			RawQuery: c.Name,
-		}
-		cnStr = u.String()
-	}
-	if cnStr == `` {
-		return errors.New(`Database driver not supported yet: ` + c.Driver)
-	}
-	db, e := sql.Open(c.Driver, cnStr)
+	db, e := sql.Open(c.driver.kind(), c.driver.connectionString())
 	if e != nil {
 		return e
 	}
@@ -208,7 +181,7 @@ func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*
 func (c *Connection) GetEnumValues(field string) ([]string, error) {
 	cols := strings.Split(field, `.`)
 
-	enum, e := c.Get(`SELECT column_type FROM information_schema.columns WHERE table_name = ? 
+	enum, e := c.Get(`SELECT column_type FROM information_schema.columns WHERE table_name = ?
 		AND column_name = ?`, cols[0], cols[1])
 	if e != nil {
 		return nil, e
@@ -240,14 +213,14 @@ func (c *Connection) Tx(tx *Tx) *Tx {
 }
 
 func (c *Connection) wrapMsgErr(msg string) SQLError {
-	return &sqlError{driver: c.Driver, msg: msg}
+	return &sqlError{driver: c.driver, msg: msg}
 }
 
 func (c *Connection) wrapErr(e error) SQLError {
 	if e == nil {
 		return nil
 	}
-	return &sqlError{driver: c.Driver, msg: e.Error()}
+	return &sqlError{driver: c.driver, msg: e.Error()}
 }
 
 //Connect ...
@@ -264,9 +237,16 @@ func Connect(driver, host string, port int, username, password, name string) (*C
 }
 
 //NewConnection ..
-func NewConnection(driver, host string, port int, username, password, name string) (*Connection, error) {
+func NewConnection(driver, hostname string, port int, username, password, name string) (*Connection, error) {
 	if port < 0 || port > 65535 {
 		return nil, fmt.Errorf(`invalid port %d`, port)
 	}
-	return &Connection{Driver: driver, Hostname: host, Port: uint16(port), Username: username, Password: password, Name: name}, nil
+	params := params{hostname, uint16(port), username, password, name}
+	switch driver {
+	case `mysql`:
+		return &Connection{driver: &mysqlDriver{params: params}}, nil
+	case `sqlserver`:
+		return &Connection{driver: &sqlserverDriver{params: params}}, nil
+	}
+	return nil, fmt.Errorf(`driver '%s' not supported`, driver)
 }

@@ -4,14 +4,17 @@ import (
 	"regexp"
 )
 
-const (
-	DriverMySQL     = `mysql`
-	DriverSQLServer = `sqlserver`
-)
-
 var (
 	regexStringColType *regexp.Regexp
 )
+
+type driver interface {
+	connectionString() string
+	kind() string
+	insertQuery(tableName string, fields []string) string
+
+	RegexDuplicate() *regexp.Regexp
+}
 
 func getRegex() *regexp.Regexp {
 	if regexStringColType == nil {

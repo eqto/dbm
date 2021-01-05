@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -271,32 +270,17 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-
 	length := len(dataMap)
-	names := make([]string, length)
+	fields := make([]string, length)
 	values := make([]interface{}, length)
-	// placeholders := make([]string, length)
 	idx := 0
 	for name, value := range dataMap {
-		names[idx] = fmt.Sprintf("`%s`", name)
+		fields[idx] = fmt.Sprintf("`%s`", name)
 		values[idx] = value
 		idx++
-		// questionMarks = append(questionMarks, `?`)
 	}
-	buff := strings.Builder{}
-	buff.WriteString(fmt.Sprintf("INSERT INTO `%s`(%s) ", tableName, strings.Join(names, `, `)))
-	placeholder := ``
-	switch t.cn.Driver {
-	case DriverMySQL:
-		placeholder = strings.Repeat(`?, `, length)
-	case DriverSQLServer:
-		for i := 0; i < length; i++ {
-			placeholder = placeholder + fmt.Sprintf(`@p%d, `, i+1)
-		}
-	}
-	placeholder = placeholder[:len(placeholder)-2]
-	buff.WriteString(fmt.Sprintf(`VALUES(%s)`, placeholder))
-	return t.Exec(buff.String(), values...)
+	query := t.cn.driver.insertQuery(tableName, fields)
+	return t.Exec(query, values...)
 }
 
 func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {
