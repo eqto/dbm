@@ -1,9 +1,9 @@
 package db
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -271,22 +271,32 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	var names []string
-	var questionMarks []string
-	var values []interface{}
 
+	length := len(dataMap)
+	names := make([]string, length)
+	values := make([]interface{}, length)
+	// placeholders := make([]string, length)
+	idx := 0
 	for name, value := range dataMap {
-		names = append(names, name)
-		values = append(values, value)
-		questionMarks = append(questionMarks, `?`)
+		names[idx] = fmt.Sprintf("`%s`", name)
+		values[idx] = value
+		idx++
+		// questionMarks = append(questionMarks, `?`)
 	}
-	var buffer bytes.Buffer
-	buffer.WriteString(`INSERT INTO `)
-	buffer.WriteString(tableName)
-	buffer.WriteString(`(` + strings.Join(names, `, `) + `)`)
-	buffer.WriteString(` VALUES(` + strings.Join(questionMarks, `, `) + `)`)
-
-	return t.Exec(buffer.String(), values...)
+	buff := strings.Builder{}
+	buff.WriteString(fmt.Sprintf("INSERT INTO `%s`(%s) ", tableName, strings.Join(names, `, `)))
+	placeholder := ``
+	switch t.cn.Driver {
+	case DriverMySQL:
+		placeholder = strings.Repeat(`?, `, length)
+	case DriverSQLServer:
+		for i := 0; i < length; i++ {
+			placeholder = placeholder + fmt.Sprintf(`@p%d, `, i+1)
+		}
+	}
+	placeholder = placeholder[:len(placeholder)-2]
+	buff.WriteString(fmt.Sprintf(`VALUES(%s)`, placeholder))
+	return t.Exec(buff.String(), values...)
 }
 
 func buildContents(cols []string, colTypes []*sql.ColumnType) []interface{} {

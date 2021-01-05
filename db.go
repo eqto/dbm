@@ -4,6 +4,11 @@ import (
 	"regexp"
 )
 
+const (
+	DriverMySQL     = `mysql`
+	DriverSQLServer = `sqlserver`
+)
+
 var (
 	regexStringColType *regexp.Regexp
 )

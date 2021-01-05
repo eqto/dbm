@@ -33,11 +33,11 @@ func (e *sqlError) Error() string {
 
 func (e *sqlError) Kind() int {
 	switch e.driver {
-	case `mysql`:
+	case DriverMySQL:
 		if duplicateMysql.MatchString(e.msg) {
 			return ErrDuplicate
 		}
-	case `sqlserver`:
+	case DriverSQLServer:
 		if duplicateMsSQL.MatchString(e.msg) {
 			return ErrDuplicate
 		}
