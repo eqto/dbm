@@ -31,7 +31,7 @@ func (s *sqlserverDriver) insertQuery(tableName string, fields []string) string 
 	for i := range values {
 		values[i] = fmt.Sprintf(`@p%d`, i+1)
 	}
-	return fmt.Sprintf("INSERT INTO `%s`(%s) VALUES(%s)",
+	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)",
 		tableName,
 		strings.Join(fields, `, `),
 		strings.Join(values, `, `))

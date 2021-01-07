@@ -28,9 +28,9 @@ func (m *mysqlDriver) insertQuery(tableName string, fields []string) string {
 	for i := range values {
 		values[i] = `?`
 	}
-	return fmt.Sprintf("INSERT INTO `%s`(%s) VALUES(%s)",
+	return fmt.Sprintf("INSERT INTO `%s`(`%s`) VALUES(%s)",
 		tableName,
-		strings.Join(fields, `, `),
+		strings.Join(fields, "`, `"),
 		strings.Join(values, `, `))
 }
 

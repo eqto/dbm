@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"reflect"
 	"time"
 )
@@ -275,7 +274,7 @@ func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, 
 	values := make([]interface{}, length)
 	idx := 0
 	for name, value := range dataMap {
-		fields[idx] = fmt.Sprintf("`%s`", name)
+		fields[idx] = name
 		values[idx] = value
 		idx++
 	}
