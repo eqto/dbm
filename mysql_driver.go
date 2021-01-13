@@ -34,7 +34,7 @@ func (m *mysqlDriver) insertQuery(tableName string, fields []string) string {
 		strings.Join(values, `, `))
 }
 
-func (m *mysqlDriver) RegexDuplicate() *regexp.Regexp {
+func (m *mysqlDriver) regexDuplicate() *regexp.Regexp {
 	return regexp.MustCompile(`^Duplicate entry.*`)
 }
 

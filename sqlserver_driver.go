@@ -37,7 +37,7 @@ func (s *sqlserverDriver) insertQuery(tableName string, fields []string) string 
 		strings.Join(values, `, `))
 }
 
-func (s *sqlserverDriver) RegexDuplicate() *regexp.Regexp {
+func (s *sqlserverDriver) regexDuplicate() *regexp.Regexp {
 	return regexp.MustCompile(`^mssql: Cannot insert duplicate key.*`)
 }
 

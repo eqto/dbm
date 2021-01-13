@@ -23,7 +23,7 @@ func (e *sqlError) Error() string {
 }
 
 func (e *sqlError) Kind() int {
-	if e.driver.RegexDuplicate().MatchString(e.msg) {
+	if e.driver.regexDuplicate().MatchString(e.msg) {
 		return ErrDuplicate
 	}
 	return ErrOther
