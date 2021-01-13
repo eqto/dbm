@@ -1,7 +1,6 @@
 package db
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"regexp"
@@ -159,22 +158,12 @@ func (c *Connection) MustInsert(tableName string, dataMap map[string]interface{}
 
 //Insert ...
 func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	var names []string
-	var questionMarks []string
-	var values []interface{}
-
-	for name, value := range dataMap {
-		names = append(names, name)
-		values = append(values, value)
-		questionMarks = append(questionMarks, `?`)
+	tx, e := c.Begin()
+	if e != nil {
+		return nil, e
 	}
-	var buffer bytes.Buffer
-	buffer.WriteString(`INSERT INTO `)
-	buffer.WriteString(tableName)
-	buffer.WriteString(`(` + strings.Join(names, `, `) + `)`)
-	buffer.WriteString(` VALUES(` + strings.Join(questionMarks, `, `) + `)`)
-
-	return c.Exec(buffer.String(), values...)
+	defer tx.Recover()
+	return tx.Insert(tableName, dataMap)
 }
 
 //GetEnumValues ...
