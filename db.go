@@ -12,6 +12,7 @@ type driver interface {
 	connectionString() string
 	kind() string
 	insertQuery(tableName string, fields []string) string
+	insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error)
 
 	RegexDuplicate() *regexp.Regexp
 }

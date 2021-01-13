@@ -40,3 +40,12 @@ func (s *sqlserverDriver) insertQuery(tableName string, fields []string) string 
 func (s *sqlserverDriver) RegexDuplicate() *regexp.Regexp {
 	return regexp.MustCompile(`^mssql: Cannot insert duplicate key.*`)
 }
+
+func (s *sqlserverDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {
+	query := s.insertQuery(tableName, fields) + `; SELECT ID = convert(bigint, SCOPE_IDENTITY())`
+	rs, e := tx.Get(query, values...)
+	if e != nil {
+		return 0, e
+	}
+	return rs.Int(`ID`), nil
+}

@@ -37,3 +37,15 @@ func (m *mysqlDriver) insertQuery(tableName string, fields []string) string {
 func (m *mysqlDriver) RegexDuplicate() *regexp.Regexp {
 	return regexp.MustCompile(`^Duplicate entry.*`)
 }
+
+func (m *mysqlDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {
+	res, e := tx.Exec(tableName, fields, values)
+	if e != nil {
+		return 0, e
+	}
+	id, e := res.LastInsertID()
+	if e != nil {
+		return 0, e
+	}
+	return id, nil
+}
