@@ -98,35 +98,9 @@ func (r Resultset) getValue(name string) *reflect.Value {
 	return nil
 }
 
-//FloatNil ...
-func (r Resultset) FloatNil(name string) *float64 {
-	if val := r.getValue(name); val != nil {
-		switch val := val.Interface().(type) {
-		case **uint64:
-			if *val == nil {
-				return nil
-			}
-			floatVal := float64(int(**val))
-			return &floatVal
-		case **int64:
-			if *val == nil {
-				return nil
-			}
-			floatVal := float64(int(**val))
-			return &floatVal
-		case **float64:
-			return *val
-		}
-	}
-	return nil
-}
-
 //Float ...
 func (r Resultset) Float(name string) float64 {
-	if val := r.FloatNil(name); val != nil {
-		return *val
-	}
-	return 0
+	return r.FloatOr(name, 0)
 }
 
 //FloatOr ...
@@ -135,6 +109,58 @@ func (r Resultset) FloatOr(name string, defValue float64) float64 {
 		return *val
 	}
 	return defValue
+}
+
+//FloatNil ...
+func (r Resultset) FloatNil(name string) *float64 {
+	if val, ok := r[name]; ok {
+		if val == nil {
+			return nil
+		}
+		float := 0.0
+		switch val := val.(type) {
+		// case *[]uint8:
+		// 	float = float64(*val)
+		case *uint8:
+			float = float64(*val)
+		case *int8:
+			float = float64(*val)
+		case *uint16:
+			float = float64(*val)
+		case *int16:
+			float = float64(*val)
+		case *uint32:
+			float = float64(*val)
+		case *int32:
+			float = float64(*val)
+		case *uint64:
+			float = float64(*val)
+		case *int64:
+			float = float64(*val)
+		case *float32:
+			float = float64(*val)
+		case *float64:
+			float = *val
+		case *sql.NullInt64:
+			if !val.Valid {
+				return nil
+			}
+			float = float64(val.Int64)
+		case *sql.NullFloat64:
+			if !val.Valid {
+				return nil
+			}
+			float = float64(val.Float64)
+		default:
+			println(fmt.Sprintf(
+				`unable to parse float from field '%s' with type '%v'`,
+				name, reflect.TypeOf(val)))
+			return nil
+		}
+		return &float
+
+	}
+	return nil
 }
 
 //String ...
@@ -199,9 +225,9 @@ func (r Resultset) StringNil(name string) *string {
 			println(fmt.Sprintf(
 				`unable to parse string from field '%s' with type '%v'`,
 				name, reflect.TypeOf(val)))
+			return nil
 		}
 		return &str
-
 	}
 	return nil
 }
