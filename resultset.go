@@ -140,22 +140,27 @@ func (r Resultset) FloatOr(name string, defValue float64) float64 {
 //StringNil ...
 func (r Resultset) StringNil(name string) *string {
 	if val, ok := r[name]; ok {
+		if val == nil {
+			return nil
+		}
 		str := ``
 		switch val := val.(type) {
+		case *[]uint8:
+			str = string(*val)
 		case *uint8:
-			str = strconv.FormatInt(int64(*val), 10)
+			str = strconv.FormatUint(uint64(*val), 10)
 		case *int8:
 			str = strconv.FormatInt(int64(*val), 10)
 		case *uint16:
-			str = strconv.FormatInt(int64(*val), 10)
+			str = strconv.FormatUint(uint64(*val), 10)
 		case *int16:
 			str = strconv.FormatInt(int64(*val), 10)
 		case *uint32:
-			str = strconv.FormatInt(int64(*val), 10)
+			str = strconv.FormatUint(uint64(*val), 10)
 		case *int32:
 			str = strconv.FormatInt(int64(*val), 10)
 		case *uint64:
-			str = strconv.FormatInt(int64(*val), 10)
+			str = strconv.FormatUint(uint64(*val), 10)
 		case *int64:
 			str = strconv.FormatInt(int64(*val), 10)
 		case *float32:
@@ -177,8 +182,6 @@ func (r Resultset) StringNil(name string) *string {
 				return nil
 			}
 			str = val.Time.String()
-		case *[]uint8:
-			str = string(*val)
 		default:
 			println(fmt.Sprintf(
 				`unable to parse string from field '%s' with type '%v'`,
@@ -190,32 +193,51 @@ func (r Resultset) StringNil(name string) *string {
 	return nil
 }
 
-//Interface ...
-func (r Resultset) Interface(name string) interface{} {
-	if val := r.getValue(name); val != nil {
-		return val.Interface()
+// //Bytes ...
+// func (r Resultset) Bytes(name string) []byte {
+// 	if val := r.getValue(name); val != nil {
+// 		if reflect.ValueOf(val.Interface()).Elem().IsNil() {
+// 			return nil
+// 		}
+// 		switch val := val.Interface().(type) {
+// 		case *[]byte:
+// 			return *val
+// 		case **uint64:
+// 			return []byte(strconv.FormatUint(**val, 10))
+// 		case **int64:
+// 			return []byte(strconv.FormatInt(**val, 10))
+// 		case **float64:
+// 			return []byte(strconv.FormatUint(uint64(**val), 10))
+// 		default:
+// 			return []byte(``)
+// 		}
+// 	}
+// 	return nil
+// }
+
+//Bytes ...
+func (r Resultset) Bytes(name string) []byte {
+	if val, ok := r[name]; ok {
+		if val == nil {
+			return nil
+		}
+		switch val := val.(type) {
+		case *[]uint8:
+			return *val
+		default:
+			println(fmt.Sprintf(
+				`unable to parse bytes from field '%s' with type '%v'`,
+				name, reflect.TypeOf(val)))
+		}
+
 	}
 	return nil
 }
 
-//Bytes ...
-func (r Resultset) Bytes(name string) []byte {
+//Interface ...
+func (r Resultset) Interface(name string) interface{} {
 	if val := r.getValue(name); val != nil {
-		if reflect.ValueOf(val.Interface()).Elem().IsNil() {
-			return nil
-		}
-		switch val := val.Interface().(type) {
-		case *[]byte:
-			return *val
-		case **uint64:
-			return []byte(strconv.FormatUint(**val, 10))
-		case **int64:
-			return []byte(strconv.FormatInt(**val, 10))
-		case **float64:
-			return []byte(strconv.FormatUint(uint64(**val), 10))
-		default:
-			return []byte(``)
-		}
+		return val.Interface()
 	}
 	return nil
 }
