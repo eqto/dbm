@@ -235,7 +235,7 @@ func Connect(driver, host string, port int, username, password, name string) (*C
 	return cn, nil
 }
 
-//NewConnection ..
+//NewConnection deprecated, use Connect instead
 func NewConnection(driver, hostname string, port int, username, password, name string) (*Connection, error) {
 	if port < 0 || port > 65535 {
 		return nil, fmt.Errorf(`invalid port %d`, port)
