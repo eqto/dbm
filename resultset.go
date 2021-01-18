@@ -137,6 +137,19 @@ func (r Resultset) FloatOr(name string, defValue float64) float64 {
 	return defValue
 }
 
+//String ...
+func (r Resultset) String(name string) string {
+	return r.StringOr(name, ``)
+}
+
+//StringOr ...
+func (r Resultset) StringOr(name string, defValue string) string {
+	if val := r.StringNil(name); val != nil {
+		return *val
+	}
+	return defValue
+}
+
 //StringNil ...
 func (r Resultset) StringNil(name string) *string {
 	if val, ok := r[name]; ok {
@@ -193,28 +206,6 @@ func (r Resultset) StringNil(name string) *string {
 	return nil
 }
 
-// //Bytes ...
-// func (r Resultset) Bytes(name string) []byte {
-// 	if val := r.getValue(name); val != nil {
-// 		if reflect.ValueOf(val.Interface()).Elem().IsNil() {
-// 			return nil
-// 		}
-// 		switch val := val.Interface().(type) {
-// 		case *[]byte:
-// 			return *val
-// 		case **uint64:
-// 			return []byte(strconv.FormatUint(**val, 10))
-// 		case **int64:
-// 			return []byte(strconv.FormatInt(**val, 10))
-// 		case **float64:
-// 			return []byte(strconv.FormatUint(uint64(**val), 10))
-// 		default:
-// 			return []byte(``)
-// 		}
-// 	}
-// 	return nil
-// }
-
 //Bytes ...
 func (r Resultset) Bytes(name string) []byte {
 	if val, ok := r[name]; ok {
@@ -240,20 +231,4 @@ func (r Resultset) Interface(name string) interface{} {
 		return val.Interface()
 	}
 	return nil
-}
-
-//String ...
-func (r Resultset) String(name string) string {
-	if val := r.StringNil(name); val != nil {
-		return *val
-	}
-	return ``
-}
-
-//StringOr ...
-func (r Resultset) StringOr(name string, defValue string) string {
-	if val := r.StringNil(name); val != nil {
-		return *val
-	}
-	return defValue
 }
