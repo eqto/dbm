@@ -1,6 +1,8 @@
 package db
 
 import (
+	"database/sql"
+	"fmt"
 	"reflect"
 	"strconv"
 	"time"
@@ -137,31 +139,53 @@ func (r Resultset) FloatOr(name string, defValue float64) float64 {
 
 //StringNil ...
 func (r Resultset) StringNil(name string) *string {
-	if val := r.getValue(name); val != nil {
-		if reflect.ValueOf(val.Interface()).Elem().IsNil() {
-			return nil
-		}
+	if val, ok := r[name]; ok {
 		str := ``
-		switch val := val.Interface().(type) {
-		case **string:
-			str = **val
-		case *[]byte:
+		switch val := val.(type) {
+		case *uint8:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *int8:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *uint16:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *int16:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *uint32:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *int32:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *uint64:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *int64:
+			str = strconv.FormatInt(int64(*val), 10)
+		case *float32:
+			str = strconv.FormatFloat(float64(*val), 'f', -1, 32)
+		case *float64:
+			str = strconv.FormatFloat(float64(*val), 'f', -1, 64)
+		case *sql.NullInt64:
+			if !val.Valid {
+				return nil
+			}
+			str = strconv.FormatInt(val.Int64, 10)
+		case *sql.NullFloat64:
+			if !val.Valid {
+				return nil
+			}
+			str = strconv.FormatFloat(val.Float64, 'f', -1, 64)
+		case *sql.NullTime:
+			if !val.Valid {
+				return nil
+			}
+			str = val.Time.String()
+		case *[]uint8:
 			str = string(*val)
-		case **uint64:
-			str = strconv.FormatUint(**val, 10)
-		case **int64:
-			str = strconv.FormatInt(**val, 10)
-		case **float64:
-			str = strconv.FormatUint(uint64(**val), 10)
-		case *time.Time:
-			str = val.String()
-		case **time.Time:
-			v := *val
-			str = v.String()
 		default:
-			println(`unable to parse string from ` + reflect.TypeOf(val).String())
+			println(fmt.Sprintf(
+				`unable to parse string from field '%s' with type '%v'`,
+				name, reflect.TypeOf(val)))
 		}
 		return &str
+
 	}
 	return nil
 }
