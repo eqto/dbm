@@ -222,10 +222,7 @@ func (r Resultset) StringNil(name string) *string {
 
 //Bytes ...
 func (r Resultset) Bytes(name string) []byte {
-	if val, ok := r[name]; ok {
-		if val == nil {
-			return nil
-		}
+	if val, ok := r[name]; ok && val != nil {
 		switch val := val.(type) {
 		case *[]uint8:
 			return *val
