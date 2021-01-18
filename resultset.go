@@ -169,10 +169,7 @@ func (r Resultset) StringOr(name string, defValue string) string {
 
 //StringNil ...
 func (r Resultset) StringNil(name string) *string {
-	if val, ok := r[name]; ok {
-		if val == nil {
-			return nil
-		}
+	if val, ok := r[name]; ok && val != nil {
 		str := ``
 		switch val := val.(type) {
 		case *[]uint8:
