@@ -109,10 +109,7 @@ func (r Resultset) FloatOr(name string, defValue float64) float64 {
 
 //FloatNil ...
 func (r Resultset) FloatNil(name string) *float64 {
-	if val, ok := r[name]; ok {
-		if val == nil {
-			return nil
-		}
+	if val, ok := r[name]; ok && val != nil {
 		float := 0.0
 		switch val := val.(type) {
 		case *uint8:
@@ -144,7 +141,7 @@ func (r Resultset) FloatNil(name string) *float64 {
 			if !val.Valid {
 				return nil
 			}
-			float = float64(val.Float64)
+			float = val.Float64
 		default:
 			println(fmt.Sprintf(
 				`unable to parse float from field '%s' with type '%v'`,
