@@ -69,19 +69,6 @@ func (r Resultset) IntOr(name string, defValue int) int {
 	return defValue
 }
 
-//TimeNil ...
-func (r Resultset) TimeNil(name string) *time.Time {
-	if val := r.getValue(name); val != nil {
-		if val, ok := val.Interface().(**time.Time); ok {
-			if *val == nil {
-				return nil
-			}
-			return *val
-		}
-	}
-	return nil
-}
-
 //Time ...
 func (r Resultset) Time(name string) time.Time {
 	if val := r.TimeNil(name); val != nil {
@@ -90,10 +77,19 @@ func (r Resultset) Time(name string) time.Time {
 	return time.Time{}
 }
 
-func (r Resultset) getValue(name string) *reflect.Value {
-	if val, ok := r[name]; ok {
-		val := reflect.ValueOf(val)
-		return &val
+//TimeNil ...
+func (r Resultset) TimeNil(name string) *time.Time {
+	if val, ok := r[name]; ok && val != nil {
+		switch val := val.(type) {
+		case *sql.NullTime:
+			if val.Valid {
+				return &val.Time
+			}
+		default:
+			println(fmt.Sprintf(
+				`unable to parse time from field '%s' with type '%v'`,
+				name, reflect.TypeOf(val)))
+		}
 	}
 	return nil
 }
@@ -119,8 +115,6 @@ func (r Resultset) FloatNil(name string) *float64 {
 		}
 		float := 0.0
 		switch val := val.(type) {
-		// case *[]uint8:
-		// 	float = float64(*val)
 		case *uint8:
 			float = float64(*val)
 		case *int8:
@@ -255,6 +249,14 @@ func (r Resultset) Bytes(name string) []byte {
 func (r Resultset) Interface(name string) interface{} {
 	if val := r.getValue(name); val != nil {
 		return val.Interface()
+	}
+	return nil
+}
+
+func (r Resultset) getValue(name string) *reflect.Value {
+	if val, ok := r[name]; ok {
+		val := reflect.ValueOf(val)
+		return &val
 	}
 	return nil
 }
