@@ -11,54 +11,9 @@ import (
 //Resultset ...
 type Resultset map[string]interface{}
 
-//IntNil ...
-func (r Resultset) IntNil(name string) *int {
-	if val := r.getValue(name); val != nil {
-		switch val := val.Interface().(type) {
-		case **uint64:
-			if *val == nil {
-				return nil
-			}
-			intVal := int(**val)
-			return &intVal
-		case **int64:
-			if *val == nil {
-				return nil
-			}
-			intVal := int(**val)
-			return &intVal
-		case **float64:
-			if *val == nil {
-				return nil
-			}
-			intVal := int(**val)
-			return &intVal
-		case *[]uint8:
-			if intVal, e := strconv.Atoi(string(*val)); e == nil {
-				return &intVal
-			}
-			return nil
-		case **string:
-			if *val == nil {
-				return nil
-			}
-			if intVal, e := strconv.Atoi(**val); e == nil {
-				return &intVal
-			}
-			return nil
-		default:
-
-		}
-	}
-	return nil
-}
-
 //Int ...
 func (r Resultset) Int(name string) int {
-	if val := r.IntNil(name); val != nil {
-		return *val
-	}
-	return 0
+	return r.IntOr(name, 0)
 }
 
 //IntOr ...
@@ -67,6 +22,48 @@ func (r Resultset) IntOr(name string, defValue int) int {
 		return *val
 	}
 	return defValue
+}
+
+//IntNil ...
+func (r Resultset) IntNil(name string) *int {
+	if val, ok := r[name]; ok && val != nil {
+		in := 0
+		switch val := val.(type) {
+		case *uint8:
+			in = int(*val)
+		case *int8:
+			in = int(*val)
+		case *uint16:
+			in = int(*val)
+		case *int16:
+			in = int(*val)
+		case *uint32:
+			in = int(*val)
+		case *int32:
+			in = int(*val)
+		case *uint64:
+			in = int(*val)
+		case *int64:
+			in = int(*val)
+		case *sql.NullInt64:
+			if !val.Valid {
+				return nil
+			}
+			in = int(val.Int64)
+		case *sql.NullTime:
+			if !val.Valid {
+				return nil
+			}
+			in = int(val.Time.Unix())
+		default:
+			println(fmt.Sprintf(
+				`unable to parse int from field '%s' with type '%v'`,
+				name, reflect.TypeOf(val)))
+			return nil
+		}
+		return &in
+	}
+	return nil
 }
 
 //Time ...
