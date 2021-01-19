@@ -27,30 +27,34 @@ func (r Resultset) IntOr(name string, defValue int) int {
 //IntNil ...
 func (r Resultset) IntNil(name string) *int {
 	if val, ok := r[name]; ok && val != nil {
+		vof := reflect.ValueOf(val)
+		if vof.IsNil() {
+			return nil
+		}
 		in := 0
-		switch val := val.(type) {
-		case *uint8:
-			in = int(*val)
-		case *int8:
-			in = int(*val)
-		case *uint16:
-			in = int(*val)
-		case *int16:
-			in = int(*val)
-		case *uint32:
-			in = int(*val)
-		case *int32:
-			in = int(*val)
-		case *uint64:
-			in = int(*val)
-		case *int64:
-			in = int(*val)
-		case *sql.NullInt64:
+		switch val := vof.Elem().Interface().(type) {
+		case uint8:
+			in = int(val)
+		case int8:
+			in = int(val)
+		case uint16:
+			in = int(val)
+		case int16:
+			in = int(val)
+		case uint32:
+			in = int(val)
+		case int32:
+			in = int(val)
+		case uint64:
+			in = int(val)
+		case int64:
+			in = int(val)
+		case sql.NullInt64:
 			if !val.Valid {
 				return nil
 			}
 			in = int(val.Int64)
-		case *sql.NullTime:
+		case sql.NullTime:
 			if !val.Valid {
 				return nil
 			}
@@ -77,8 +81,12 @@ func (r Resultset) Time(name string) time.Time {
 //TimeNil ...
 func (r Resultset) TimeNil(name string) *time.Time {
 	if val, ok := r[name]; ok && val != nil {
-		switch val := val.(type) {
-		case *sql.NullTime:
+		vof := reflect.ValueOf(val)
+		if vof.IsNil() {
+			return nil
+		}
+		switch val := vof.Elem().Interface().(type) {
+		case sql.NullTime:
 			if val.Valid {
 				return &val.Time
 			}
@@ -107,34 +115,38 @@ func (r Resultset) FloatOr(name string, defValue float64) float64 {
 //FloatNil ...
 func (r Resultset) FloatNil(name string) *float64 {
 	if val, ok := r[name]; ok && val != nil {
+		vof := reflect.ValueOf(val)
+		if vof.IsNil() {
+			return nil
+		}
 		float := 0.0
-		switch val := val.(type) {
-		case *uint8:
-			float = float64(*val)
-		case *int8:
-			float = float64(*val)
-		case *uint16:
-			float = float64(*val)
-		case *int16:
-			float = float64(*val)
-		case *uint32:
-			float = float64(*val)
-		case *int32:
-			float = float64(*val)
-		case *uint64:
-			float = float64(*val)
-		case *int64:
-			float = float64(*val)
-		case *float32:
-			float = float64(*val)
-		case *float64:
-			float = *val
-		case *sql.NullInt64:
+		switch val := vof.Elem().Interface().(type) {
+		case uint8:
+			float = float64(val)
+		case int8:
+			float = float64(val)
+		case uint16:
+			float = float64(val)
+		case int16:
+			float = float64(val)
+		case uint32:
+			float = float64(val)
+		case int32:
+			float = float64(val)
+		case uint64:
+			float = float64(val)
+		case int64:
+			float = float64(val)
+		case float32:
+			float = float64(val)
+		case float64:
+			float = val
+		case sql.NullInt64:
 			if !val.Valid {
 				return nil
 			}
 			float = float64(val.Int64)
-		case *sql.NullFloat64:
+		case sql.NullFloat64:
 			if !val.Valid {
 				return nil
 			}
@@ -167,41 +179,45 @@ func (r Resultset) StringOr(name string, defValue string) string {
 //StringNil ...
 func (r Resultset) StringNil(name string) *string {
 	if val, ok := r[name]; ok && val != nil {
+		vof := reflect.ValueOf(val)
+		if vof.IsNil() {
+			return nil
+		}
 		str := ``
-		switch val := val.(type) {
-		case *[]uint8:
-			str = string(*val)
-		case *uint8:
-			str = strconv.FormatUint(uint64(*val), 10)
-		case *int8:
-			str = strconv.FormatInt(int64(*val), 10)
-		case *uint16:
-			str = strconv.FormatUint(uint64(*val), 10)
-		case *int16:
-			str = strconv.FormatInt(int64(*val), 10)
-		case *uint32:
-			str = strconv.FormatUint(uint64(*val), 10)
-		case *int32:
-			str = strconv.FormatInt(int64(*val), 10)
-		case *uint64:
-			str = strconv.FormatUint(uint64(*val), 10)
-		case *int64:
-			str = strconv.FormatInt(int64(*val), 10)
-		case *float32:
-			str = strconv.FormatFloat(float64(*val), 'f', -1, 32)
-		case *float64:
-			str = strconv.FormatFloat(float64(*val), 'f', -1, 64)
-		case *sql.NullInt64:
+		switch val := vof.Elem().Interface().(type) {
+		case []uint8:
+			str = string(val)
+		case uint8:
+			str = strconv.FormatUint(uint64(val), 10)
+		case int8:
+			str = strconv.FormatInt(int64(val), 10)
+		case uint16:
+			str = strconv.FormatUint(uint64(val), 10)
+		case int16:
+			str = strconv.FormatInt(int64(val), 10)
+		case uint32:
+			str = strconv.FormatUint(uint64(val), 10)
+		case int32:
+			str = strconv.FormatInt(int64(val), 10)
+		case uint64:
+			str = strconv.FormatUint(uint64(val), 10)
+		case int64:
+			str = strconv.FormatInt(int64(val), 10)
+		case float32:
+			str = strconv.FormatFloat(float64(val), 'f', -1, 32)
+		case float64:
+			str = strconv.FormatFloat(float64(val), 'f', -1, 64)
+		case sql.NullInt64:
 			if !val.Valid {
 				return nil
 			}
 			str = strconv.FormatInt(val.Int64, 10)
-		case *sql.NullFloat64:
+		case sql.NullFloat64:
 			if !val.Valid {
 				return nil
 			}
 			str = strconv.FormatFloat(val.Float64, 'f', -1, 64)
-		case *sql.NullTime:
+		case sql.NullTime:
 			if !val.Valid {
 				return nil
 			}
@@ -220,9 +236,13 @@ func (r Resultset) StringNil(name string) *string {
 //Bytes ...
 func (r Resultset) Bytes(name string) []byte {
 	if val, ok := r[name]; ok && val != nil {
-		switch val := val.(type) {
-		case *[]uint8:
-			return *val
+		vof := reflect.ValueOf(val)
+		if vof.IsNil() {
+			return nil
+		}
+		switch val := vof.Elem().Interface().(type) {
+		case []uint8:
+			return val
 		default:
 			println(fmt.Sprintf(
 				`unable to parse bytes from field '%s' with type '%v'`,
