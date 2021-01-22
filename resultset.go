@@ -33,6 +33,9 @@ func (r Resultset) IntNil(name string) *int {
 		}
 		if vof.Elem().Kind() == reflect.Ptr {
 			vof = vof.Elem()
+			if vof.IsNil() {
+				return nil
+			}
 		}
 		in := 0
 		switch val := vof.Elem().Interface().(type) {
@@ -100,6 +103,9 @@ func (r Resultset) TimeNil(name string) *time.Time {
 		}
 		if vof.Elem().Kind() == reflect.Ptr {
 			vof = vof.Elem()
+			if vof.IsNil() {
+				return nil
+			}
 		}
 		switch val := vof.Elem().Interface().(type) {
 		case sql.NullTime:
@@ -139,6 +145,9 @@ func (r Resultset) FloatNil(name string) *float64 {
 		}
 		if vof.Elem().Kind() == reflect.Ptr {
 			vof = vof.Elem()
+			if vof.IsNil() {
+				return nil
+			}
 		}
 		float := 0.0
 		switch val := vof.Elem().Interface().(type) {
@@ -206,6 +215,9 @@ func (r Resultset) StringNil(name string) *string {
 		}
 		if vof.Elem().Kind() == reflect.Ptr {
 			vof = vof.Elem()
+			if vof.IsNil() {
+				return nil
+			}
 		}
 		str := ``
 		switch val := vof.Elem().Interface().(type) {
@@ -265,6 +277,12 @@ func (r Resultset) Bytes(name string) []byte {
 		vof := reflect.ValueOf(val)
 		if vof.IsNil() {
 			return nil
+		}
+		if vof.Elem().Kind() == reflect.Ptr {
+			vof = vof.Elem()
+			if vof.IsNil() {
+				return nil
+			}
 		}
 		switch val := vof.Elem().Interface().(type) {
 		case []uint8:
