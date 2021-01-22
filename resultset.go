@@ -31,6 +31,9 @@ func (r Resultset) IntNil(name string) *int {
 		if vof.IsNil() {
 			return nil
 		}
+		if vof.Elem().Kind() == reflect.Ptr {
+			vof = vof.Elem()
+		}
 		in := 0
 		switch val := vof.Elem().Interface().(type) {
 		case uint8:
@@ -49,6 +52,16 @@ func (r Resultset) IntNil(name string) *int {
 			in = int(val)
 		case int64:
 			in = int(val)
+		case string:
+			var e error
+			in, e = strconv.Atoi(val)
+			if e != nil {
+				println(fmt.Sprintf(
+					`unable to parse int from field '%s' with type '%v'`,
+					name, reflect.TypeOf(val)))
+				println(e.Error())
+			}
+
 		case sql.NullInt64:
 			if !val.Valid {
 				return nil
@@ -85,11 +98,16 @@ func (r Resultset) TimeNil(name string) *time.Time {
 		if vof.IsNil() {
 			return nil
 		}
+		if vof.Elem().Kind() == reflect.Ptr {
+			vof = vof.Elem()
+		}
 		switch val := vof.Elem().Interface().(type) {
 		case sql.NullTime:
 			if val.Valid {
 				return &val.Time
 			}
+		case time.Time:
+			return &val
 		default:
 			println(fmt.Sprintf(
 				`unable to parse time from field '%s' with type '%v'`,
@@ -118,6 +136,9 @@ func (r Resultset) FloatNil(name string) *float64 {
 		vof := reflect.ValueOf(val)
 		if vof.IsNil() {
 			return nil
+		}
+		if vof.Elem().Kind() == reflect.Ptr {
+			vof = vof.Elem()
 		}
 		float := 0.0
 		switch val := vof.Elem().Interface().(type) {
@@ -183,6 +204,9 @@ func (r Resultset) StringNil(name string) *string {
 		if vof.IsNil() {
 			return nil
 		}
+		if vof.Elem().Kind() == reflect.Ptr {
+			vof = vof.Elem()
+		}
 		str := ``
 		switch val := vof.Elem().Interface().(type) {
 		case []uint8:
@@ -207,6 +231,8 @@ func (r Resultset) StringNil(name string) *string {
 			str = strconv.FormatFloat(float64(val), 'f', -1, 32)
 		case float64:
 			str = strconv.FormatFloat(float64(val), 'f', -1, 64)
+		case string:
+			return &val
 		case sql.NullInt64:
 			if !val.Valid {
 				return nil
