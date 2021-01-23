@@ -78,15 +78,7 @@ func (m *mysqlDriver) buildContents(colTypes []*sql.ColumnType) ([]interface{}, 
 		case reflect.Float64:
 			vals[idx] = new(float64)
 		case reflect.Slice:
-			if colType.DatabaseTypeName() == `VARCHAR` {
-				if null, ok := colType.Nullable(); ok && null {
-					vals[idx] = new(*string)
-				} else {
-					vals[idx] = new(string)
-				}
-			} else {
-				vals[idx] = new([]byte)
-			}
+			vals[idx] = new([]byte)
 		case reflect.Struct:
 			switch scanType.Name() {
 			case `NullInt64`:
