@@ -45,7 +45,7 @@ func (s *sqlserverDriver) regexDuplicate() *regexp.Regexp {
 }
 
 func (s *sqlserverDriver) regexRecordNotFound() *regexp.Regexp {
-	return nil
+	return regexp.MustCompile(`record not found`)
 }
 
 func (s *sqlserverDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {
