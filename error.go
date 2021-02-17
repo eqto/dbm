@@ -2,6 +2,7 @@ package db
 
 const (
 	NoErr = iota
+	ErrNotFound
 	ErrDuplicate
 	ErrOther
 )
@@ -25,6 +26,9 @@ func (e *sqlError) Error() string {
 func (e *sqlError) Kind() int {
 	if e.driver.regexDuplicate().MatchString(e.msg) {
 		return ErrDuplicate
+	}
+	if regex := e.driver.regexRecordNotFound(); regex != nil && regex.MatchString(e.msg) {
+		return ErrNotFound
 	}
 	return ErrOther
 }

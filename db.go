@@ -17,6 +17,7 @@ type driver interface {
 	insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error)
 
 	regexDuplicate() *regexp.Regexp
+	regexRecordNotFound() *regexp.Regexp
 }
 
 func getRegex() *regexp.Regexp {
