@@ -40,10 +40,6 @@ func (m *mysqlDriver) regexDuplicate() *regexp.Regexp {
 	return regexp.MustCompile(`^Duplicate entry.*`)
 }
 
-func (m *mysqlDriver) regexRecordNotFound() *regexp.Regexp {
-	return regexp.MustCompile(`record not found`)
-}
-
 func (m *mysqlDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {
 	res, e := tx.Exec(tableName, fields, values)
 	if e != nil {

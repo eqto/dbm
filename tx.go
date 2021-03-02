@@ -237,7 +237,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 		return e
 	}
 	if rs == nil || len(rs) == 0 {
-		return t.cn.wrapMsgErr(`record not found`)
+		return newSQLError(t.cn.driver, ErrNotFound)
 	}
 
 	typeOf = typeOf.Elem()

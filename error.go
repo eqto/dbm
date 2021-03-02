@@ -7,6 +7,10 @@ const (
 	ErrOther
 )
 
+const (
+	strNotFound = `no records found`
+)
+
 //SQLError ..
 type SQLError interface {
 	error
@@ -16,6 +20,7 @@ type SQLError interface {
 type sqlError struct {
 	SQLError
 	driver driver
+	kind   int
 	msg    string
 }
 
@@ -24,11 +29,22 @@ func (e *sqlError) Error() string {
 }
 
 func (e *sqlError) Kind() int {
+	if e.kind > 0 {
+		return e.kind
+	}
 	if e.driver.regexDuplicate().MatchString(e.msg) {
 		return ErrDuplicate
 	}
-	if regex := e.driver.regexRecordNotFound(); regex != nil && regex.MatchString(e.msg) {
-		return ErrNotFound
-	}
 	return ErrOther
+}
+
+func newSQLError(driver driver, kind int) SQLError {
+	s := &sqlError{driver: driver, kind: kind}
+	switch kind {
+	case ErrNotFound:
+		s.msg = strNotFound
+	default:
+		s.msg = `Error`
+	}
+	return s
 }
