@@ -41,7 +41,7 @@ func (s *sqlserverDriver) insertQuery(tableName string, fields []string) string 
 }
 
 func (s *sqlserverDriver) regexDuplicate() *regexp.Regexp {
-	return regexp.MustCompile(`^mssql: Cannot insert duplicate key.*`)
+	return regexp.MustCompile(`.*Cannot insert duplicate key.*`)
 }
 
 func (s *sqlserverDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {
