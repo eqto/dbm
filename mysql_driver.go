@@ -36,8 +36,8 @@ func (m *mysqlDriver) insertQuery(tableName string, fields []string) string {
 		strings.Join(values, `, `))
 }
 
-func (m *mysqlDriver) regexDuplicate() *regexp.Regexp {
-	return regexp.MustCompile(`^Duplicate entry.*`)
+func (m *mysqlDriver) isDuplicate(msg string) bool {
+	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
 }
 
 func (m *mysqlDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {

@@ -40,8 +40,8 @@ func (s *sqlserverDriver) insertQuery(tableName string, fields []string) string 
 		strings.Join(values, `, `))
 }
 
-func (s *sqlserverDriver) regexDuplicate() *regexp.Regexp {
-	return regexp.MustCompile(`.*Cannot insert duplicate key.*`)
+func (s *sqlserverDriver) isDuplicate(msg string) bool {
+	return regexp.MustCompile(`.*Cannot insert duplicate key.*`).MatchString(msg)
 }
 
 func (s *sqlserverDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {

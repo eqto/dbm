@@ -78,17 +78,17 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		rows, e = t.tx.Query(query, params...)
 	}
 	if e != nil {
-		return nil, t.cn.wrapErr(e)
+		return nil, wrapErr(t.cn, e)
 	}
 	defer rows.Close()
 
 	cols, e := rows.Columns()
 	if e != nil {
-		return nil, t.cn.wrapErr(e)
+		return nil, wrapErr(t.cn, e)
 	}
 	colTypes, e := rows.ColumnTypes()
 	if e != nil {
-		return nil, t.cn.wrapErr(e)
+		return nil, wrapErr(t.cn, e)
 	}
 
 	var results []Resultset
@@ -100,7 +100,7 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		}
 		if e = rows.Scan(contents...); e != nil {
 			rows.Close()
-			return nil, t.cn.wrapErr(e)
+			return nil, wrapErr(t.cn, e)
 		}
 
 		rs := Resultset{}
@@ -128,7 +128,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 
 	rs, e := t.Select(query, params...)
 	if e != nil {
-		return t.cn.wrapErr(e)
+		return wrapErr(t.cn, e)
 	}
 
 	if len(rs) == 0 {
@@ -151,7 +151,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 	rs, e := t.Select(query, params...)
 	if e != nil || rs == nil {
-		return nil, t.cn.wrapErr(e)
+		return nil, wrapErr(t.cn, e)
 	}
 	return rs[0], nil
 }
@@ -237,7 +237,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 		return e
 	}
 	if rs == nil || len(rs) == 0 {
-		return newSQLError(t.cn.driver, ErrNotFound)
+		return newSQLError(t.cn.driver, errNotFound)
 	}
 
 	typeOf = typeOf.Elem()
@@ -254,10 +254,10 @@ func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
 		res, e = t.tx.Exec(query, params...)
 	}
 	if e != nil {
-		return nil, t.cn.wrapErr(e)
+		return nil, wrapErr(t.cn, e)
 	}
 
-	return &Result{result: res}, t.cn.wrapErr(e)
+	return &Result{result: res}, wrapErr(t.cn, e)
 }
 
 //MustExec ...

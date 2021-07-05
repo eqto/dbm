@@ -211,32 +211,7 @@ func (c *Connection) Tx(tx *Tx) *Tx {
 	return tx
 }
 
-func (c *Connection) wrapMsgErr(msg string) SQLError {
-	return &sqlError{driver: c.driver, msg: msg}
-}
-
-func (c *Connection) wrapErr(e error) SQLError {
-	if e == nil {
-		return nil
-	}
-	return &sqlError{driver: c.driver, msg: e.Error()}
-}
-
-//Connect ...
-func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {
-	cn, e := NewConnection(driver, host, port, username, password, name)
-	if e != nil {
-		return nil, e
-	}
-	if e := cn.Connect(); e != nil {
-		return nil, e
-	}
-	lastCn = cn
-	return cn, nil
-}
-
-//NewConnection deprecated, use Connect instead
-func NewConnection(driver, hostname string, port int, username, password, name string) (*Connection, error) {
+func newConnection(driver, hostname string, port int, username, password, name string) (*Connection, error) {
 	if port < 0 || port > 65535 {
 		return nil, fmt.Errorf(`invalid port %d`, port)
 	}
