@@ -36,6 +36,7 @@ func ErrorDuplicate(e error) bool {
 	return isError(e, errDuplicate)
 }
 
+//ErrorNotFound to check if no result founds using GetStruct or SelectStruct
 func ErrorNotFound(e error) bool {
 	return isError(e, errNotFound)
 }
