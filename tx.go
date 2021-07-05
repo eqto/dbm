@@ -150,8 +150,10 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 //Get ...
 func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 	rs, e := t.Select(query, params...)
-	if e != nil || rs == nil {
+	if e != nil {
 		return nil, wrapErr(t.cn, e)
+	} else if rs == nil {
+		return nil, nil
 	}
 	return rs[0], nil
 }
@@ -256,8 +258,7 @@ func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
 	if e != nil {
 		return nil, wrapErr(t.cn, e)
 	}
-
-	return &Result{result: res}, wrapErr(t.cn, e)
+	return &Result{result: res}, nil
 }
 
 //MustExec ...
