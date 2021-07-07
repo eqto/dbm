@@ -71,48 +71,7 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
-	var rows *sql.Rows
-	var e error
-	if t.tx == nil {
-		rows, e = t.cn.db.Query(query, params...)
-	} else {
-		rows, e = t.tx.Query(query, params...)
-	}
-	if e != nil {
-		return nil, wrapErr(t.drv, e)
-	}
-	defer rows.Close()
-
-	cols, e := rows.Columns()
-	if e != nil {
-		return nil, wrapErr(t.drv, e)
-	}
-	colTypes, e := rows.ColumnTypes()
-	if e != nil {
-		return nil, wrapErr(t.drv, e)
-	}
-
-	var results []Resultset
-
-	for rows.Next() {
-		contents, e := t.drv.buildContents(colTypes)
-		if e != nil {
-			return nil, e
-		}
-		if e = rows.Scan(contents...); e != nil {
-			rows.Close()
-			return nil, wrapErr(t.drv, e)
-		}
-
-		rs := Resultset{}
-		for key, val := range cols {
-			rs[val] = contents[key]
-		}
-		results = append(results, rs)
-	}
-	rows.Close()
-
-	return results, nil
+	return execSelect(t.drv, t.tx, query, params...)
 }
 
 //SelectStruct ...
@@ -252,14 +211,6 @@ func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
 	return exec(t.drv, t.tx, query, params...)
 }
 
-func exec(drv *driver, tx *sql.Tx, query string, params ...interface{}) (*Result, error) {
-	res, e := tx.Exec(query, params...)
-	if e != nil {
-		return nil, wrapErr(drv, e)
-	}
-	return &Result{result: res}, nil
-}
-
 //MustExec ...
 func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 	result, e := t.Exec(query, params...)
@@ -271,10 +222,50 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	return insert(t.drv, t.tx, tableName, dataMap)
+	return execInsert(t.drv, t.tx, tableName, dataMap)
 }
 
-func insert(drv *driver, tx *sql.Tx, tableName string, dataMap map[string]interface{}) (*Result, error) {
+func execSelect(drv *driver, tx *sql.Tx, query string, params ...interface{}) ([]Resultset, error) {
+	var rows *sql.Rows
+	var e error
+	if e != nil {
+		return nil, wrapErr(drv, e)
+	}
+	defer rows.Close()
+
+	cols, e := rows.Columns()
+	if e != nil {
+		return nil, wrapErr(drv, e)
+	}
+	colTypes, e := rows.ColumnTypes()
+	if e != nil {
+		return nil, wrapErr(drv, e)
+	}
+
+	var results []Resultset
+
+	for rows.Next() {
+		contents, e := drv.buildContents(colTypes)
+		if e != nil {
+			return nil, e
+		}
+		if e = rows.Scan(contents...); e != nil {
+			rows.Close()
+			return nil, wrapErr(drv, e)
+		}
+
+		rs := Resultset{}
+		for key, val := range cols {
+			rs[val] = contents[key]
+		}
+		results = append(results, rs)
+	}
+	rows.Close()
+
+	return results, nil
+}
+
+func execInsert(drv *driver, tx *sql.Tx, tableName string, dataMap map[string]interface{}) (*Result, error) {
 	length := len(dataMap)
 	fields := make([]string, length)
 	values := make([]interface{}, length)
@@ -286,4 +277,12 @@ func insert(drv *driver, tx *sql.Tx, tableName string, dataMap map[string]interf
 	}
 	query := drv.insertQuery(tableName, fields)
 	return exec(drv, tx, query, values...)
+}
+
+func exec(drv *driver, tx *sql.Tx, query string, params ...interface{}) (*Result, error) {
+	res, e := tx.Exec(query, params...)
+	if e != nil {
+		return nil, wrapErr(drv, e)
+	}
+	return &Result{result: res}, nil
 }
