@@ -78,17 +78,17 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		rows, e = t.tx.Query(query, params...)
 	}
 	if e != nil {
-		return nil, wrapErr(t.cn, e)
+		return nil, wrapErr(t.cn.driver, e)
 	}
 	defer rows.Close()
 
 	cols, e := rows.Columns()
 	if e != nil {
-		return nil, wrapErr(t.cn, e)
+		return nil, wrapErr(t.cn.driver, e)
 	}
 	colTypes, e := rows.ColumnTypes()
 	if e != nil {
-		return nil, wrapErr(t.cn, e)
+		return nil, wrapErr(t.cn.driver, e)
 	}
 
 	var results []Resultset
@@ -100,7 +100,7 @@ func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
 		}
 		if e = rows.Scan(contents...); e != nil {
 			rows.Close()
-			return nil, wrapErr(t.cn, e)
+			return nil, wrapErr(t.cn.driver, e)
 		}
 
 		rs := Resultset{}
@@ -128,7 +128,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 
 	rs, e := t.Select(query, params...)
 	if e != nil {
-		return wrapErr(t.cn, e)
+		return wrapErr(t.cn.driver, e)
 	}
 
 	if len(rs) == 0 {
@@ -151,7 +151,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 	rs, e := t.Select(query, params...)
 	if e != nil {
-		return nil, wrapErr(t.cn, e)
+		return nil, wrapErr(t.cn.driver, e)
 	} else if rs == nil {
 		return nil, nil
 	}
@@ -248,15 +248,13 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 
 //Exec ...
 func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
-	var res sql.Result
-	var e error
-	if t.tx == nil {
-		res, e = t.cn.db.Exec(query, params...)
-	} else {
-		res, e = t.tx.Exec(query, params...)
-	}
+	return exec(t.cn.driver, t.tx, query, params...)
+}
+
+func exec(drv *driver, tx *sql.Tx, query string, params ...interface{}) (*Result, error) {
+	res, e := tx.Exec(query, params...)
 	if e != nil {
-		return nil, wrapErr(t.cn, e)
+		return nil, wrapErr(drv, e)
 	}
 	return &Result{result: res}, nil
 }
@@ -272,6 +270,10 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
+	return insert(t.cn.driver, t.tx, tableName, dataMap)
+}
+
+func insert(drv *driver, tx *sql.Tx, tableName string, dataMap map[string]interface{}) (*Result, error) {
 	length := len(dataMap)
 	fields := make([]string, length)
 	values := make([]interface{}, length)
@@ -281,6 +283,6 @@ func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, 
 		values[idx] = value
 		idx++
 	}
-	query := t.cn.driver.insertQuery(tableName, fields)
-	return t.Exec(query, values...)
+	query := drv.insertQuery(tableName, fields)
+	return exec(drv, tx, query, values...)
 }
