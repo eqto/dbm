@@ -44,15 +44,6 @@ func (s *sqlserverDriver) isDuplicate(msg string) bool {
 	return regexp.MustCompile(`.*Cannot insert duplicate key.*`).MatchString(msg)
 }
 
-func (s *sqlserverDriver) insertReturnID(tx *Tx, tableName string, fields []string, values []interface{}) (int, error) {
-	query := s.insertQuery(tableName, fields) + `; SELECT ID = convert(bigint, SCOPE_IDENTITY())`
-	rs, e := tx.Get(query, values...)
-	if e != nil {
-		return 0, e
-	}
-	return rs.Int(`ID`), nil
-}
-
 func (s *sqlserverDriver) buildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	vals := make([]interface{}, len(colTypes))
 	for idx, colType := range colTypes {

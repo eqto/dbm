@@ -284,17 +284,3 @@ func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, 
 	query := t.cn.driver.insertQuery(tableName, fields)
 	return t.Exec(query, values...)
 }
-
-//InsertReturnID ...
-func (t *Tx) InsertReturnID(tableName string, dataMap map[string]interface{}) (int, error) {
-	length := len(dataMap)
-	fields := make([]string, length)
-	values := make([]interface{}, length)
-	idx := 0
-	for name, value := range dataMap {
-		fields[idx] = name
-		values[idx] = value
-		idx++
-	}
-	return t.cn.driver.insertReturnID(t, tableName, fields, values)
-}

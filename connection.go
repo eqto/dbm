@@ -166,16 +166,6 @@ func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*
 	return tx.Insert(tableName, dataMap)
 }
 
-//InsertReturnID ...
-func (c *Connection) InsertReturnID(tableName string, dataMap map[string]interface{}) (int, error) {
-	tx, e := c.Begin()
-	if e != nil {
-		return 0, e
-	}
-	defer tx.Recover()
-	return tx.InsertReturnID(tableName, dataMap)
-}
-
 //GetEnumValues ...
 func (c *Connection) GetEnumValues(field string) ([]string, error) {
 	cols := strings.Split(field, `.`)
