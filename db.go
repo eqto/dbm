@@ -9,6 +9,5 @@ func Connect(driver, host string, port int, username, password, name string) (*C
 	if e := cn.Connect(); e != nil {
 		return nil, e
 	}
-	lastCn = cn
 	return cn, nil
 }

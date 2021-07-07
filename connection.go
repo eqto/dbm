@@ -10,8 +10,6 @@ import (
 	"github.com/eqto/go-db/driver"
 )
 
-var lastCn *Connection
-
 //Connection ...
 type Connection struct {
 	db *sql.DB
@@ -174,10 +172,9 @@ func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*
 	return tx.Insert(tableName, dataMap)
 }
 
-//GetEnumValues ...
-func (c *Connection) GetEnumValues(field string) ([]string, error) {
+//EnumValues return enum values, parameter field using dot notation. Ex: profile.gender , returning ['male', 'female']
+func (c *Connection) EnumValues(field string) ([]string, error) {
 	cols := strings.Split(field, `.`)
-
 	enum, e := c.Get(`SELECT column_type FROM information_schema.columns WHERE table_name = ?
 		AND column_name = ?`, cols[0], cols[1])
 	if e != nil {
