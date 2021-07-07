@@ -231,60 +231,9 @@ func (q *QueryBuilder) ToSQL() string {
 
 	strFields := strings.Join(sqlFields, `, `)
 	var buffer bytes.Buffer
-	selectOptions := q.selectOptions
-	if selectOptions != `` {
-		selectOptions = selectOptions + ` `
-	}
 	buffer.WriteString(`SELECT ` + q.selectOptions + strFields + q.ToFromSQL() + q.ToConditionSQL())
 
 	return buffer.String()
-}
-
-func (q *QueryBuilder) splitColumns(rawColumns string) {
-	var buffer bytes.Buffer
-	var fields []string
-	sql := rawColumns
-	if q.aliasMap == nil {
-		q.aliasMap = make(map[string]string)
-	}
-	for {
-		idx := strings.Index(sql, `,`)
-		if idx < 0 {
-			if len(sql) > 0 {
-				buff := strings.Trim(sql, " \r\n\t")
-				fields = append(fields, buffer.String()+buff)
-			}
-			break
-		}
-		buffer.WriteString(sql[0:idx])
-		buff := strings.Trim(buffer.String(), " \r\n\t")
-		if strings.Count(buff, `(`) == strings.Count(buff, `)`) {
-			if len(buff) > 0 {
-				fields = append(fields, buff)
-				buffer.Reset()
-			}
-		} else {
-			buffer.WriteString(`, `)
-		}
-		sql = sql[idx+1:]
-	}
-
-	regex := regexp.MustCompile(`(?Uis)^(.*)(?:\s+AS\s+(.*)|)$`)
-
-	for _, val := range fields {
-		trimmed := strings.Trim(val, "\r\n\t")
-		matches := regex.FindStringSubmatch(trimmed)
-		field := field{name: matches[1], alias: matches[2]}
-		if matches[2] != `` {
-			q.aliasMap[matches[2]] = matches[1]
-		} else {
-			matches = strings.Split(trimmed, `.`)
-			if len(matches) > 1 && matches[1] != `` {
-				q.aliasMap[matches[1]] = trimmed
-			}
-		}
-		q.fields = append(q.fields, field)
-	}
 }
 
 //ParseQuery ...
