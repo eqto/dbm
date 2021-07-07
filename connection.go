@@ -19,7 +19,7 @@ type Connection struct {
 	username string
 	password string
 	name     string
-	driver   driver
+	driver   *driver
 }
 
 //Connect ...

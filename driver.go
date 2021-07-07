@@ -3,7 +3,7 @@ package db
 import "database/sql"
 
 var (
-	drivers = make(map[string]driver)
+	drivers = make(map[string]*driver)
 )
 
 type driver struct {
@@ -15,7 +15,7 @@ type driver struct {
 }
 
 func Register(name string, rawDriver interface{}) {
-	drv := driver{name: name}
+	drv := &driver{name: name}
 	if d, ok := rawDriver.(interface {
 		ConnectionString(string, int, string, string, string) string
 	}); ok {

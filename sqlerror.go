@@ -12,7 +12,7 @@ const (
 )
 
 type sqlError struct {
-	drv  driver
+	drv  *driver
 	kind int
 	msg  string
 }
@@ -21,7 +21,7 @@ func (e *sqlError) Error() string {
 	return e.msg
 }
 
-func newSQLError(drv driver, kind int) *sqlError {
+func newSQLError(drv *driver, kind int) *sqlError {
 	s := &sqlError{drv: drv, kind: kind}
 	switch kind {
 	case errNotFound:
@@ -58,9 +58,9 @@ func isError(e error, kind int) bool {
 	return false
 }
 
-func wrapErr(cn *Connection, e error) *sqlError {
+func wrapErr(drv *driver, e error) *sqlError {
 	if e == nil {
 		return nil
 	}
-	return &sqlError{drv: cn.driver, msg: e.Error()}
+	return &sqlError{drv: drv, msg: e.Error()}
 }

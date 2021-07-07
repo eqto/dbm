@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/eqto/go-db"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func init() {

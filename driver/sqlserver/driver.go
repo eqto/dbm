@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/eqto/go-db"
 )
 
