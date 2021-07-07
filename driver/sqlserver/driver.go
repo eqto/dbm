@@ -10,17 +10,17 @@ import (
 	"time"
 
 	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/eqto/go-db"
+	"github.com/eqto/go-db/driver"
 )
 
 func init() {
-	db.Register(`sqlserver`, &driver{})
+	driver.Register(`sqlserver`, &sqlserver{})
 }
 
-type driver struct {
+type sqlserver struct {
 }
 
-func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
+func (*sqlserver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	vals := make([]interface{}, len(colTypes))
 	for idx, colType := range colTypes {
 		scanType := colType.ScanType()
@@ -44,7 +44,7 @@ func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) 
 	return vals, nil
 }
 
-func (d *driver) ConnectionString(hostname string, port int, username, password, name string) string {
+func (d *sqlserver) ConnectionString(hostname string, port int, username, password, name string) string {
 	u := url.URL{
 		Scheme:   `sqlserver`,
 		User:     url.UserPassword(username, password),
@@ -54,7 +54,7 @@ func (d *driver) ConnectionString(hostname string, port int, username, password,
 	return u.String()
 }
 
-func (*driver) InsertQuery(tableName string, fields []string) string {
+func (*sqlserver) InsertQuery(tableName string, fields []string) string {
 	values := make([]string, len(fields))
 	for i := range values {
 		values[i] = fmt.Sprintf(`@p%d`, i+1)
@@ -65,6 +65,6 @@ func (*driver) InsertQuery(tableName string, fields []string) string {
 		strings.Join(values, `, `))
 }
 
-func (*driver) IsDuplicate(msg string) bool {
+func (*sqlserver) IsDuplicate(msg string) bool {
 	return regexp.MustCompile(`.*Cannot insert duplicate key.*`).MatchString(msg)
 }

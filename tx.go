@@ -5,13 +5,14 @@ import (
 	"errors"
 	"reflect"
 	"time"
+
+	"github.com/eqto/go-db/driver"
 )
 
 //Tx ...
 type Tx struct {
-	drv    *driver
-	cn     *Connection
-	tx     *sql.Tx
+	drv    *driver.Driver
+	sqlTx  *sql.Tx
 	finish bool
 }
 
@@ -35,20 +36,20 @@ func (t *Tx) Recover() {
 
 //Commit ...
 func (t *Tx) Commit() error {
-	if t.tx == nil || t.finish {
+	if t.finish {
 		return nil
 	}
 	t.finish = true
-	return t.tx.Commit()
+	return t.sqlTx.Commit()
 }
 
 //Rollback ...
 func (t *Tx) Rollback() error {
-	if t.tx == nil || t.finish {
+	if t.finish {
 		return nil
 	}
 	t.finish = true
-	return t.tx.Rollback()
+	return t.sqlTx.Rollback()
 }
 
 //MustInsert ...
@@ -71,7 +72,7 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
-	return execSelect(t.drv, t.tx, query, params...)
+	return ExecSelect(t.drv.BuildContents, t.sqlTx, query, params...)
 }
 
 //SelectStruct ...
@@ -109,13 +110,11 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 
 //Get ...
 func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
-	rs, e := t.Select(query, params...)
+	rs, e := ExecGet(t.drv.BuildContents, t.sqlTx, query, params...)
 	if e != nil {
 		return nil, wrapErr(t.drv, e)
-	} else if rs == nil {
-		return nil, nil
 	}
-	return rs[0], nil
+	return rs, nil
 }
 
 //MustGet ...
@@ -208,7 +207,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 
 //Exec ...
 func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
-	return exec(t.drv, t.tx, query, params...)
+	return Exec(t.sqlTx, query, params...)
 }
 
 //MustExec ...
@@ -222,5 +221,5 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	return execInsert(t.drv, t.tx, tableName, dataMap)
+	return ExecInsert(t.drv.InsertQuery, t.sqlTx, tableName, dataMap)
 }

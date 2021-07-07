@@ -1,5 +1,7 @@
 package db
 
+import "github.com/eqto/go-db/driver"
+
 const (
 	noError = iota
 	errDuplicate
@@ -12,7 +14,7 @@ const (
 )
 
 type sqlError struct {
-	drv  *driver
+	drv  *driver.Driver
 	kind int
 	msg  string
 }
@@ -21,7 +23,7 @@ func (e *sqlError) Error() string {
 	return e.msg
 }
 
-func newSQLError(drv *driver, kind int) *sqlError {
+func newSQLError(drv *driver.Driver, kind int) *sqlError {
 	s := &sqlError{drv: drv, kind: kind}
 	switch kind {
 	case errNotFound:
@@ -47,7 +49,7 @@ func isError(e error, kind int) bool {
 	}
 	if e, ok := e.(*sqlError); ok {
 		if e.kind == 0 {
-			if e.drv.isDuplicate(e.msg) {
+			if e.drv.IsDuplicate(e.msg) {
 				e.kind = errDuplicate
 			} else {
 				e.kind = errOther
@@ -58,7 +60,7 @@ func isError(e error, kind int) bool {
 	return false
 }
 
-func wrapErr(drv *driver, e error) *sqlError {
+func wrapErr(drv *driver.Driver, e error) *sqlError {
 	if e == nil {
 		return nil
 	}

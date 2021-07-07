@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/eqto/go-db/driver"
 )
 
 var lastCn *Connection
@@ -19,12 +21,12 @@ type Connection struct {
 	username string
 	password string
 	name     string
-	driver   *driver
+	driver   *driver.Driver
 }
 
 //Connect ...
 func (c *Connection) Connect() error {
-	db, e := sql.Open(c.driver.name, c.driver.connectionString(c.hostname, c.port, c.username, c.password, c.name))
+	db, e := sql.Open(c.driver.Name, c.driver.ConnectionString(c.hostname, c.port, c.username, c.password, c.name))
 	if e != nil {
 		return e
 	}
@@ -58,11 +60,11 @@ func (c *Connection) SetMaxOpenConns(max int) {
 
 //Begin ...
 func (c *Connection) Begin() (*Tx, error) {
-	tx, e := c.db.Begin()
+	sqlTx, e := c.db.Begin()
 	if e != nil {
 		return nil, e
 	}
-	return &Tx{cn: c, tx: tx}, nil
+	return &Tx{drv: c.driver, sqlTx: sqlTx}, nil
 }
 
 //MustBegin ...
@@ -199,25 +201,19 @@ func (c *Connection) Close() error {
 	return c.db.Close()
 }
 
-//Tx create new Tx when parameter tx is nil and the new Tx will have autocommit enabled. If parameter tx is not null then return tx from parameter
-func (c *Connection) Tx(tx *Tx) *Tx {
-	if tx == nil {
-		return &Tx{cn: c}
-	}
-	return tx
-}
-
 func newConnection(driverName, hostname string, port int, username, password, name string) (*Connection, error) {
 	if port < 0 || port > 65535 {
 		return nil, fmt.Errorf(`invalid port %d`, port)
 	}
-	if driver, ok := drivers[driverName]; ok {
-		return &Connection{
-			driver:   driver,
-			hostname: hostname, port: port,
-			username: username, password: password,
-			name: name,
-		}, nil
+	drv, e := driver.Get(driverName)
+	if e != nil {
+		return nil, e
 	}
-	return nil, fmt.Errorf(`driver '%s' not supported or not registered. Import from github.com/go-db/driver`, driverName)
+	return &Connection{
+		driver:   drv,
+		hostname: hostname, port: port,
+		username: username, password: password,
+		name: name,
+	}, nil
+
 }

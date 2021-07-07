@@ -7,18 +7,18 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eqto/go-db"
+	"github.com/eqto/go-db/driver"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func init() {
-	db.Register(`mysql`, &driver{})
+	driver.Register(`mysql`, &mysql{})
 }
 
-type driver struct {
+type mysql struct {
 }
 
-func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
+func (*mysql) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	vals := make([]interface{}, len(colTypes))
 	for idx, colType := range colTypes {
 		scanType := colType.ScanType()
@@ -62,7 +62,7 @@ func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) 
 	return vals, nil
 }
 
-func (*driver) ConnectionString(hostname string, port int, username, password, name string) string {
+func (*mysql) ConnectionString(hostname string, port int, username, password, name string) string {
 	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
 		username, password,
 		hostname, port,
@@ -70,7 +70,7 @@ func (*driver) ConnectionString(hostname string, port int, username, password, n
 	)
 }
 
-func (*driver) InsertQuery(tableName string, fields []string) string {
+func (*mysql) InsertQuery(tableName string, fields []string) string {
 	values := make([]string, len(fields))
 	for i := range values {
 		values[i] = `?`
@@ -81,6 +81,6 @@ func (*driver) InsertQuery(tableName string, fields []string) string {
 		strings.Join(values, `, `))
 }
 
-func (*driver) IsDuplicate(msg string) bool {
+func (*mysql) IsDuplicate(msg string) bool {
 	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
 }
