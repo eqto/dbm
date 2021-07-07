@@ -154,6 +154,17 @@ func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 	return rs[0], nil
 }
 
+//Get ...
+func (t *Tx) GetByQuery(q *Q) (Resultset, error) {
+	rs, e := t.Select(q.String(), q.values...)
+	if e != nil {
+		return nil, e
+	} else if rs == nil {
+		return nil, nil
+	}
+	return rs[0], nil
+}
+
 //MustGet ...
 func (t *Tx) MustGet(query string, params ...interface{}) Resultset {
 	rs, e := t.Get(query, params...)
@@ -161,6 +172,25 @@ func (t *Tx) MustGet(query string, params ...interface{}) Resultset {
 		panic(e)
 	}
 	return rs
+}
+
+//GetStruct ...
+func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) error {
+	typeOf := reflect.TypeOf(dest)
+	if typeOf.Kind() != reflect.Ptr {
+		return errors.New(`dest is not a pointer`)
+	}
+
+	rs, e := t.Get(query, params...)
+	if e != nil {
+		return e
+	}
+	if rs == nil || len(rs) == 0 {
+		return newSQLError(t.drv, errNotFound)
+	}
+
+	typeOf = typeOf.Elem()
+	return t.assignStruct(dest, t.createFieldMap(typeOf), rs, typeOf)
 }
 
 func (t *Tx) createFieldMap(el reflect.Type) map[string]string {
@@ -221,25 +251,6 @@ func (t *Tx) assignStruct(dest interface{}, fieldMap map[string]string, rs Resul
 		valField.Set(val.(reflect.Value))
 	}
 	return nil
-}
-
-//GetStruct ...
-func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) error {
-	typeOf := reflect.TypeOf(dest)
-	if typeOf.Kind() != reflect.Ptr {
-		return errors.New(`dest is not a pointer`)
-	}
-
-	rs, e := t.Get(query, params...)
-	if e != nil {
-		return e
-	}
-	if rs == nil || len(rs) == 0 {
-		return newSQLError(t.drv, errNotFound)
-	}
-
-	typeOf = typeOf.Elem()
-	return t.assignStruct(dest, t.createFieldMap(typeOf), rs, typeOf)
 }
 
 //Exec ...

@@ -93,15 +93,6 @@ func (c *Connection) Exec(query string, params ...interface{}) (*Result, error) 
 	return tx.Exec(query, params...)
 }
 
-//MustGet ...
-func (c *Connection) MustGet(query string, params ...interface{}) Resultset {
-	rs, e := c.Get(query, params...)
-	if e != nil {
-		panic(e)
-	}
-	return rs
-}
-
 //Get ...
 func (c *Connection) Get(query string, params ...interface{}) (Resultset, error) {
 	tx, e := c.Begin()
@@ -111,6 +102,25 @@ func (c *Connection) Get(query string, params ...interface{}) (Resultset, error)
 	defer tx.Recover()
 
 	return tx.Get(query, params...)
+}
+
+//GetQuery ...
+func (c *Connection) GetQuery(q *Q) (Resultset, error) {
+	tx, e := c.Begin()
+	if e != nil {
+		return nil, e
+	}
+	defer tx.Recover()
+	return tx.GetByQuery(q)
+}
+
+//MustGet ...
+func (c *Connection) MustGet(query string, params ...interface{}) Resultset {
+	rs, e := c.Get(query, params...)
+	if e != nil {
+		panic(e)
+	}
+	return rs
 }
 
 //GetStruct ...
