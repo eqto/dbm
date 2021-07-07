@@ -14,18 +14,24 @@ var lastCn *Connection
 type Connection struct {
 	db *sql.DB
 
-	driver driver
+	hostname string
+	port     int
+	username string
+	password string
+	name     string
+	driver   driver
 }
 
 //Connect ...
 func (c *Connection) Connect() error {
-	db, e := sql.Open(c.driver.kind(), c.driver.connectionString())
+	db, e := sql.Open(c.driver.name, c.driver.connectionString(c.hostname, c.port, c.username, c.password, c.name))
 	if e != nil {
 		return e
 	}
 	if e := db.Ping(); e != nil {
 		return e
 	}
+
 	c.db = db
 	return nil
 }
@@ -201,16 +207,17 @@ func (c *Connection) Tx(tx *Tx) *Tx {
 	return tx
 }
 
-func newConnection(driver, hostname string, port int, username, password, name string) (*Connection, error) {
+func newConnection(driverName, hostname string, port int, username, password, name string) (*Connection, error) {
 	if port < 0 || port > 65535 {
 		return nil, fmt.Errorf(`invalid port %d`, port)
 	}
-	params := params{hostname, uint16(port), username, password, name}
-	switch driver {
-	case `mysql`:
-		return &Connection{driver: &mysqlDriver{params: params}}, nil
-	case `sqlserver`:
-		return &Connection{driver: &sqlserverDriver{params: params}}, nil
+	if driver, ok := drivers[driverName]; ok {
+		return &Connection{
+			driver:   driver,
+			hostname: hostname, port: port,
+			username: username, password: password,
+			name: name,
+		}, nil
 	}
-	return nil, fmt.Errorf(`driver '%s' not supported`, driver)
+	return nil, fmt.Errorf(`driver '%s' not supported or not registered. Import from github.com/go-db/driver`, driverName)
 }

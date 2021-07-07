@@ -12,17 +12,17 @@ const (
 )
 
 type sqlError struct {
-	driver driver
-	kind   int
-	msg    string
+	drv  driver
+	kind int
+	msg  string
 }
 
 func (e *sqlError) Error() string {
 	return e.msg
 }
 
-func newSQLError(driver driver, kind int) *sqlError {
-	s := &sqlError{driver: driver, kind: kind}
+func newSQLError(drv driver, kind int) *sqlError {
+	s := &sqlError{drv: drv, kind: kind}
 	switch kind {
 	case errNotFound:
 		s.msg = strNotFound
@@ -47,7 +47,7 @@ func isError(e error, kind int) bool {
 	}
 	if e, ok := e.(*sqlError); ok {
 		if e.kind == 0 {
-			if e.driver.isDuplicate(e.msg) {
+			if e.drv.isDuplicate(e.msg) {
 				e.kind = errDuplicate
 			} else {
 				e.kind = errOther
@@ -62,5 +62,5 @@ func wrapErr(cn *Connection, e error) *sqlError {
 	if e == nil {
 		return nil
 	}
-	return &sqlError{driver: cn.driver, msg: e.Error()}
+	return &sqlError{drv: cn.driver, msg: e.Error()}
 }

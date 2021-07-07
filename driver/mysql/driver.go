@@ -1,4 +1,4 @@
-package db
+package mysql
 
 import (
 	"database/sql"
@@ -6,41 +6,18 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/eqto/go-db"
 )
 
-type mysqlDriver struct {
-	driver
-	params
+func init() {
+	db.Register(`mysql`, &driver{})
 }
 
-func (m *mysqlDriver) connectionString() string {
-	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
-		m.username, m.password,
-		m.hostname, m.port,
-		m.name,
-	)
+type driver struct {
 }
 
-func (m *mysqlDriver) kind() string {
-	return `mysql`
-}
-
-func (m *mysqlDriver) insertQuery(tableName string, fields []string) string {
-	values := make([]string, len(fields))
-	for i := range values {
-		values[i] = `?`
-	}
-	return fmt.Sprintf("INSERT INTO `%s`(`%s`) VALUES(%s)",
-		tableName,
-		strings.Join(fields, "`, `"),
-		strings.Join(values, `, `))
-}
-
-func (m *mysqlDriver) isDuplicate(msg string) bool {
-	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
-}
-
-func (m *mysqlDriver) buildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
+func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	vals := make([]interface{}, len(colTypes))
 	for idx, colType := range colTypes {
 		scanType := colType.ScanType()
@@ -82,4 +59,27 @@ func (m *mysqlDriver) buildContents(colTypes []*sql.ColumnType) ([]interface{}, 
 		}
 	}
 	return vals, nil
+}
+
+func (*driver) ConnectionString(hostname string, port int, username, password, name string) string {
+	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
+		username, password,
+		hostname, port,
+		name,
+	)
+}
+
+func (*driver) InsertQuery(tableName string, fields []string) string {
+	values := make([]string, len(fields))
+	for i := range values {
+		values[i] = `?`
+	}
+	return fmt.Sprintf("INSERT INTO `%s`(`%s`) VALUES(%s)",
+		tableName,
+		strings.Join(fields, "`, `"),
+		strings.Join(values, `, `))
+}
+
+func (*driver) IsDuplicate(msg string) bool {
+	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
 }
