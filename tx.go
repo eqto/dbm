@@ -72,7 +72,42 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
-	return ExecSelect(t.drv.BuildContents, t.sqlTx, query, params...)
+	rows, e := t.sqlTx.Query(query, params...)
+	if e != nil {
+		return nil, wrapErr(t.drv, e)
+	}
+	defer rows.Close()
+
+	cols, e := rows.Columns()
+	if e != nil {
+		return nil, wrapErr(t.drv, e)
+	}
+	colTypes, e := rows.ColumnTypes()
+	if e != nil {
+		return nil, wrapErr(t.drv, e)
+	}
+
+	var results []Resultset
+
+	for rows.Next() {
+		contents, e := t.drv.BuildContents(colTypes)
+		if e != nil {
+			return nil, wrapErr(t.drv, e)
+		}
+		if e = rows.Scan(contents...); e != nil {
+			rows.Close()
+			return nil, wrapErr(t.drv, e)
+		}
+
+		rs := Resultset{}
+		for key, val := range cols {
+			rs[val] = contents[key]
+		}
+		results = append(results, rs)
+	}
+	rows.Close()
+
+	return results, nil
 }
 
 //SelectStruct ...
@@ -89,7 +124,7 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 
 	rs, e := t.Select(query, params...)
 	if e != nil {
-		return wrapErr(t.drv, e)
+		return e
 	}
 
 	if len(rs) == 0 {
@@ -110,11 +145,13 @@ func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{})
 
 //Get ...
 func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
-	rs, e := ExecGet(t.drv.BuildContents, t.sqlTx, query, params...)
+	rs, e := t.Select(query, params...)
 	if e != nil {
-		return nil, wrapErr(t.drv, e)
+		return nil, e
+	} else if rs == nil {
+		return nil, nil
 	}
-	return rs, nil
+	return rs[0], nil
 }
 
 //MustGet ...
@@ -207,7 +244,11 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 
 //Exec ...
 func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
-	return Exec(t.sqlTx, query, params...)
+	res, e := t.sqlTx.Exec(query, params...)
+	if e != nil {
+		return nil, wrapErr(t.drv, e)
+	}
+	return &Result{result: res}, nil
 }
 
 //MustExec ...
@@ -221,5 +262,15 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	return ExecInsert(t.drv.InsertQuery, t.sqlTx, tableName, dataMap)
+	length := len(dataMap)
+	fields := make([]string, length)
+	values := make([]interface{}, length)
+	idx := 0
+	for name, value := range dataMap {
+		fields[idx] = name
+		values[idx] = value
+		idx++
+	}
+	query := t.drv.InsertQuery(tableName, fields)
+	return t.Exec(query, values...)
 }
