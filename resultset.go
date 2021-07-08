@@ -55,6 +55,8 @@ func (r Resultset) IntNil(name string) *int {
 			in = int(val)
 		case int64:
 			in = int(val)
+		case float32:
+			in = int(val)
 		case float64:
 			in = int(val)
 		case string:
