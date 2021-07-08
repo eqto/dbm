@@ -12,17 +12,50 @@ const (
 )
 
 type Q struct {
-	driverName string
-	mode       int
-	table      string
-	keys       []string
-	outputs    []string //sqlserver
-	values     []interface{}
+	driverName   string
+	mode         int
+	table        string
+	fields       []string
+	keys         []string
+	outputs      []string //sqlserver
+	values       []interface{}
+	wheres       []string
+	start, count int
 }
 
 func (q *Q) InsertInto(table string) *Q {
-	q.mode = modeInsert
-	q.table = table
+	q.mode, q.table = modeInsert, table
+	return q
+}
+
+func (q *Q) Select(fields ...string) *Q {
+	if len(fields) == 1 {
+		split := strings.Split(fields[0], `,`)
+		for idx, str := range split {
+			split[idx] = strings.TrimSpace(str)
+		}
+		q.fields = split
+	}
+	q.fields = fields
+	return q
+}
+
+func (q *Q) From(table string) *Q {
+	q.mode, q.table = modeSelect, table
+	return q
+}
+
+func (q *Q) Where(query string, value interface{}) *Q {
+	q.wheres, q.values = append(q.wheres, query), append(q.values, value)
+	return q
+}
+
+func (q *Q) Limit(number ...int) *Q {
+	if len(number) == 1 {
+		q.count = number[0]
+	} else if len(number) == 2 {
+		q.count, q.count = number[0], number[1]
+	}
 	return q
 }
 
@@ -33,10 +66,9 @@ func (q *Q) Output(keys ...string) *Q {
 		for idx, str := range split {
 			split[idx] = strings.TrimSpace(str)
 		}
-		q.outputs = split
-	} else if len(keys) > 1 {
-		q.outputs = keys
+		keys = split
 	}
+	q.keys = keys
 	return q
 }
 
@@ -90,6 +122,14 @@ func (q *Q) String() string {
 			}
 		}
 		s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
+	case modeSelect:
+		s.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strings.Join(q.fields, `, `), q.table))
+		if len(q.wheres) > 0 {
+			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(q.wheres, ` AND `)))
+		}
+		if q.count > 0 {
+			s.WriteString(fmt.Sprintf(` LIMIT %d, %d`, q.start, q.count))
+		}
 	}
 	return s.String()
 }
