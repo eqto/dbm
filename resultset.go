@@ -55,6 +55,8 @@ func (r Resultset) IntNil(name string) *int {
 			in = int(val)
 		case int64:
 			in = int(val)
+		case float64:
+			in = int(val)
 		case string:
 			var e error
 			in, e = strconv.Atoi(val)
@@ -70,6 +72,11 @@ func (r Resultset) IntNil(name string) *int {
 				return nil
 			}
 			in = int(val.Int64)
+		case sql.NullFloat64:
+			if !val.Valid {
+				return nil
+			}
+			in = int(val.Float64)
 		case sql.NullTime:
 			if !val.Valid {
 				return nil
