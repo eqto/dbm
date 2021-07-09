@@ -44,7 +44,16 @@ func (*mysql) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 		case reflect.Float64:
 			vals[idx] = new(float64)
 		case reflect.Slice:
-			vals[idx] = new([]byte)
+			switch colType.DatabaseTypeName() {
+			case `DECIMAL`:
+				if null, ok := colType.Nullable(); null || ok {
+					vals[idx] = new(sql.NullFloat64)
+				} else {
+					vals[idx] = new(float64)
+				}
+			default:
+				vals[idx] = new([]byte)
+			}
 		case reflect.Struct:
 			switch scanType.Name() {
 			case `NullInt64`:
