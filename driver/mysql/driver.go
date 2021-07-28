@@ -8,14 +8,11 @@ import (
 	"strings"
 
 	"github.com/eqto/go-db"
-	"github.com/eqto/go-db/query"
-	log "github.com/eqto/go-logger"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func init() {
 	db.Register(`mysql`, &driver{})
-	// driver.Register(`mysql`, &mysql{})
 }
 
 type driver struct {
@@ -90,29 +87,34 @@ func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) 
 	return vals, nil
 }
 
-func BuildQuery(q *query.Param) string {
+func (*driver) BuildQuery(param db.QueryParameter) string {
 	s := strings.Builder{}
-	println(q.Mode())
-	switch q.Mode() {
-	case query.ModeInsert:
-		values := []string{}
-		s.WriteString(`INSERT INTO ` + q.Table())
-		if len(q.Keys()) > 0 {
-			s.WriteString(`(` + strings.Join(q.Keys(), `, `) + `)`)
-			values = append(values, `?`)
+	println(param.Mode())
+	switch param.Mode() {
+	case db.ModeInsert:
+		// values := []string{}
+		// s.WriteString(`INSERT INTO ` + param.Table())
+		// if len(param.Keys()) > 0 {
+		// 	s.WriteString(`(` + strings.Join(param.Keys(), `, `) + `)`)
+		// 	values = append(values, `?`)
+		// }
+		// s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
+	case db.ModeSelect:
+		fields := []string{}
+		for _, field := range param.Fields() {
+			fields = append(fields, field.String())
 		}
-		s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
-	case query.ModeSelect:
-		strFields := strings.Join(q.Fields(), `, `)
+
+		strFields := strings.Join(fields, `, `)
 		if strFields == `` {
 			strFields = `*`
 		}
-		s.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strFields, q.Table()))
-		if len(q.Wheres()) > 0 {
-			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(q.Wheres(), ` AND `)))
+		s.WriteString(fmt.Sprintf("SELECT %s FROM %s", strFields, param.Table().String()))
+		if len(param.Wheres()) > 0 {
+			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(param.Wheres(), ` AND `)))
 		}
-		if q.Count() > 0 {
-			s.WriteString(fmt.Sprintf(` LIMIT %d, %d`, q.Start(), q.Count()))
+		if param.Count() > 0 {
+			s.WriteString(fmt.Sprintf(` LIMIT %d, %d`, param.Start(), param.Count()))
 		}
 	}
 	return s.String()

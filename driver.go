@@ -3,8 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-
-	"github.com/eqto/go-db/query"
 )
 
 var (
@@ -16,7 +14,7 @@ type Driver interface {
 	DataSourceName(string, int, string, string, string) string
 	IsDuplicate(string) bool
 	BuildContents([]*sql.ColumnType) ([]interface{}, error)
-	BuildQuery(*query.Builder) string
+	BuildQuery(QueryParameter) string
 }
 
 func Register(name string, driver Driver) {

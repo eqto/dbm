@@ -1,265 +1,171 @@
 package db
 
 import (
-	"bytes"
-	"regexp"
-	"strconv"
 	"strings"
 )
 
-//QueryBuilder ...
+const (
+	ModeSelect = iota
+	ModeInsert
+	ModeDelete
+)
+
 type QueryBuilder struct {
-	selectOptions string
-	fields        []field
-	//field, alias
-	aliasMap map[string]string
+	drv Driver
 
-	driverKind  string
-	fromParams  string
-	whereParams []string
-	groupParams []string
-	orderParams []string
-	limitStart  int
-	limitLength int
+	mode         int
+	table        Table
+	fields       []Field
+	keys         []string
+	outputs      []string //sqlserver
+	values       []interface{}
+	wheres       []string
+	start, count int
 }
 
-//Clone ...
-func (q *QueryBuilder) Clone() *QueryBuilder {
-	clone := &QueryBuilder{
-		fromParams:  q.fromParams,
-		limitStart:  q.limitStart,
-		limitLength: q.limitLength,
-	}
-	if q.fields != nil {
-		clone.fields = make([]field, len(q.fields))
-		copy(clone.fields, q.fields)
-	}
-	if q.aliasMap != nil {
-		clone.aliasMap = make(map[string]string)
-		for key, val := range q.aliasMap {
-			clone.aliasMap[key] = val
-		}
-	}
-
-	if q.whereParams != nil {
-		clone.whereParams = make([]string, len(q.whereParams))
-		copy(clone.whereParams, q.whereParams)
-	}
-	if q.groupParams != nil {
-		clone.groupParams = make([]string, len(q.groupParams))
-		copy(clone.groupParams, q.groupParams)
-	}
-	if q.orderParams != nil {
-		clone.orderParams = make([]string, len(q.orderParams))
-		copy(clone.orderParams, q.orderParams)
-	}
-	return clone
+func (b *QueryBuilder) InsertInto(table string, fields ...string) *QueryBuilder {
+	b.mode = ModeInsert
+	b.From(table)
+	return b
 }
 
-func (q *QueryBuilder) parseWhere(where string) {
-	regex := regexp.MustCompile(`(?is)\s+AND\s+`)
-	wheres := regex.Split(where, -1)
-
-	for _, val := range wheres {
-		if val != `` {
-			q.whereParams = append(q.whereParams, val)
-		}
+func (q *QueryBuilder) Select(fields ...string) *QueryBuilder {
+	if len(fields) == 1 {
+		split := strings.Split(fields[0], `,`)
+		fields = split
 	}
+	q.fields = parseFields(fields...)
+	return q
 }
 
-func (q *QueryBuilder) parseGroup(group string) {
-	regex := regexp.MustCompile(`(?is)([a-z0-9._]+)(?:\s+([^\s]+)|)\s*(?:,|$)`)
-	groups := regex.FindAllStringSubmatch(group, -1)
-
-	for _, val := range groups {
-		if val[1] != `` {
-			order := strings.ToUpper(val[2])
-			if order == `` {
-				order = `ASC`
-			}
-			q.groupParams = append(q.groupParams, val[1]+` `+order)
+func parseFields(fields ...string) []Field {
+	parsedFields := []Field{}
+	for _, field := range fields {
+		split := strings.Split(field, ` AS `)
+		f := Field{}
+		if len(split) == 2 {
+			f.alias = strings.TrimSpace(split[1])
+			field = split[0]
 		}
-	}
-}
-
-func (q *QueryBuilder) parseOrder(order string) {
-	sorts := strings.Split(order, `,`)
-	for _, val := range sorts {
-		if val != `` {
-			q.orderParams = append(q.orderParams, val)
-		}
-	}
-}
-
-func (q *QueryBuilder) parseFields(rawColumns string) {
-	var buffer bytes.Buffer
-	var fields []string
-	sql := rawColumns
-	if q.aliasMap == nil {
-		q.aliasMap = make(map[string]string)
-	}
-	for {
-		idx := strings.Index(sql, `,`)
-		if idx < 0 {
-			if len(sql) > 0 {
-				buff := strings.Trim(sql, " \r\n\t")
-				fields = append(fields, buffer.String()+buff)
-			}
-			break
-		}
-		buffer.WriteString(sql[0:idx])
-		buff := strings.Trim(buffer.String(), " \r\n\t")
-		if strings.Count(buff, `(`) == strings.Count(buff, `)`) {
-			if len(buff) > 0 {
-				fields = append(fields, buff)
-				buffer.Reset()
-			}
+		split = strings.Split(field, `.`)
+		if len(split) == 2 {
+			f.table = strings.TrimSpace(split[0])
+			f.name = strings.TrimSpace(split[1])
 		} else {
-			buffer.WriteString(`, `)
+			f.name = strings.TrimSpace(field)
 		}
-		sql = sql[idx+1:]
+		parsedFields = append(parsedFields, f)
 	}
+	return parsedFields
+}
 
-	regex := regexp.MustCompile(`(?Uis)^(.*)(?:\s+AS\s+(.*)|)$`)
+func (q *QueryBuilder) From(table string) *QueryBuilder {
+	q.mode = ModeSelect
+	split := strings.SplitN(table, ` `, 2)
+	if len(split) == 2 {
+		q.table = Table{strings.TrimSpace(split[0]), strings.TrimSpace(split[1])}
+	} else {
+		q.table = Table{strings.TrimSpace(table), ``}
+	}
+	return q
+}
 
-	for _, val := range fields {
-		trimmed := strings.Trim(val, "\r\n\t")
-		matches := regex.FindStringSubmatch(trimmed)
-		field := field{name: matches[1], alias: matches[2]}
-		if matches[2] != `` {
-			q.aliasMap[matches[2]] = matches[1]
-		} else {
-			matches = strings.Split(trimmed, `.`)
-			if len(matches) > 1 && matches[1] != `` {
-				q.aliasMap[matches[1]] = trimmed
-			}
+func (q *QueryBuilder) Where(query string, value interface{}) *QueryBuilder {
+	q.wheres, q.values = append(q.wheres, query), append(q.values, value)
+	return q
+}
+
+func (q *QueryBuilder) Limit(number ...int) *QueryBuilder {
+	if len(number) == 1 {
+		q.count = number[0]
+	} else if len(number) == 2 {
+		q.count, q.count = number[0], number[1]
+	}
+	return q
+}
+
+//Output used by sqlserver
+func (q *QueryBuilder) Output(keys ...string) *QueryBuilder {
+	if len(keys) == 1 {
+		split := strings.Split(keys[0], `,`)
+		for idx, str := range split {
+			split[idx] = strings.TrimSpace(str)
 		}
-		q.fields = append(q.fields, field)
+		keys = split
 	}
+	q.keys = keys
+	return q
 }
 
-//GetField ...
-func (q *QueryBuilder) GetField(name string) string {
-	if field, ok := q.aliasMap[name]; ok {
-		return field
+func (q *QueryBuilder) ValueMap(values map[string]interface{}) *QueryBuilder {
+	for key, val := range values {
+		q.keys = append(q.keys, key)
+		q.values = append(q.values, val)
 	}
-	for _, val := range q.fields {
-		if val.name == name || strings.HasSuffix(val.name, `.`+name) {
-			return val.name
-		}
-	}
-	return ``
+	return q
 }
 
-//Where ...
-func (q *QueryBuilder) Where(name string) {
-	q.WhereOp(name, ` = `)
+func (q *QueryBuilder) Value(key string, value interface{}) *QueryBuilder {
+	q.keys = append(q.keys, key)
+	q.values = append(q.values, value)
+	return q
 }
 
-//Order ...
-func (q *QueryBuilder) Order(field string, order string) {
-	q.orderParams = append(q.orderParams, field+` `+order)
+func (q *QueryBuilder) String() string {
+	if q.drv == nil {
+		return ``
+	}
+	return q.drv.BuildQuery(QueryParameter{q})
 }
 
-//Limit ...
-func (q *QueryBuilder) Limit(start int, length int) {
-	q.limitLength = length
-	q.limitStart = start
+func New(drv Driver) *QueryBuilder {
+	return &QueryBuilder{drv: drv}
 }
 
-//LimitStart ...
-func (q *QueryBuilder) LimitStart() int {
-	return q.limitStart
-}
-
-//LimitLength ...
-func (q *QueryBuilder) LimitLength() int {
-	return q.limitLength
-}
-
-//WhereOp ...
-func (q *QueryBuilder) WhereOp(name string, operator string) {
-	if field, ok := q.aliasMap[name]; ok {
-		name = field
-	}
-	if operator == `` {
-		operator = `=`
-	}
-	operator = strings.ToUpper(strings.TrimSpace(operator))
-	if operator == `LIKE` {
-		operator = ` LIKE `
-	}
-	where := name + operator + `?`
-
-	if operator == `FULLTEXT` {
-		where = `MATCH(` + name + `) AGAINST(? IN BOOLEAN MODE)`
-	}
-
-	q.whereParams = append(q.whereParams, where)
-}
-
-//ToConditionSQL ...
-func (q *QueryBuilder) ToConditionSQL() string {
-	var buffer bytes.Buffer
-	if len(q.whereParams) > 0 {
-		buffer.WriteString(` WHERE ` + strings.Join(q.whereParams, ` AND `))
-	}
-	if len(q.groupParams) > 0 {
-		buffer.WriteString(` GROUP BY ` + strings.Join(q.groupParams, `, `))
-	}
-	if len(q.orderParams) > 0 {
-		buffer.WriteString(` ORDER BY ` + strings.Join(q.orderParams, `, `))
-	}
-	if q.driverKind == `mysql` && q.limitLength > 0 {
-		buffer.WriteString(` LIMIT ` + strconv.Itoa(q.limitStart) + `, ` + strconv.Itoa(q.limitLength))
-	}
-
-	return buffer.String()
-}
-
-//ToFromSQL ...
-func (q *QueryBuilder) ToFromSQL() string {
-	return ` FROM ` + q.fromParams
-}
-
-//ToSQL ...
-func (q *QueryBuilder) ToSQL() string {
-	var sqlFields []string
-	for _, val := range q.fields {
-		sqlFields = append(sqlFields, val.String())
-	}
-
-	strFields := strings.Join(sqlFields, `, `)
-	var buffer bytes.Buffer
-	buffer.WriteString(`SELECT ` + q.selectOptions + strFields + q.ToFromSQL() + q.ToConditionSQL())
-
-	return buffer.String()
-}
-
-//ParseQuery ...
-func ParseQuery(query string) *QueryBuilder {
-	query = strings.TrimSpace(query)
-	qb := QueryBuilder{driverKind: `mysql`}
-	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
-		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(SQL_CALC_FOUND_ROWS\s+|)(.*)\s+FROM\s+(.*)(?:\s+WHERE\s+(.*)|)(?:\s+GROUP BY\s+(.*)|)(?:\s+ORDER\s+BY\s+(.*)|)(?:\s+LIMIT\s+(?:(?:([0-9]+)\s*,\s*|)([0-9]+))|)$`)
-		matches := regex.FindStringSubmatch(query)
-
-		if len(matches) < 4 {
-			return nil
-		}
-		qb.selectOptions = matches[1]
-		qb.parseFields(matches[2])
-		qb.fromParams = matches[3]
-		qb.parseWhere(matches[4])
-		qb.parseGroup(matches[5])
-		qb.parseOrder(matches[6])
-		if matches[6] != `` {
-			qb.limitStart, _ = strconv.Atoi(matches[6])
-		}
-		if matches[7] != `` {
-			qb.limitLength, _ = strconv.Atoi(matches[7])
-		}
-	}
-
-	return &qb
-}
+// func (q *Builder) String() string {
+// 	s := strings.Builder{}
+// 	switch q.mode {
+// 	case ModeInsert:
+// 		values := []string{}
+// 		s.WriteString(`INSERT INTO ` + q.table)
+// 		if len(q.keys) > 0 {
+// 			s.WriteString(`(` + strings.Join(q.keys, `, `) + `)`)
+// 			if q.drv.Name() == `sqlserver` {
+// 				for idx := range q.values {
+// 					values = append(values, fmt.Sprintf(`@p%d`, idx+1))
+// 				}
+// 			} else {
+// 				values = append(values, `?`)
+// 			}
+// 		}
+// 		if len(q.outputs) > 0 {
+// 			for _, output := range q.outputs {
+// 				ucase := strings.ToUpper(output)
+// 				outputs := []string{}
+// 				if strings.HasPrefix(ucase, `INSERTED.`) {
+// 					outputs = append(outputs, `INSERTED`+output[8:])
+// 				} else if strings.HasPrefix(ucase, `DELETED.`) {
+// 					outputs = append(outputs, `DELETED`+output[7:])
+// 				} else {
+// 					switch q.mode {
+// 					case ModeInsert:
+// 						outputs = append(outputs, `INSERTED.`+output)
+// 					case ModeDelete:
+// 						outputs = append(outputs, `DELETED.`+output)
+// 					}
+// 				}
+// 				s.WriteString(fmt.Sprintf(` OUTPUT %s`, strings.Join(outputs, `, `)))
+// 			}
+// 		}
+// 		s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
+// 	case ModeSelect:
+// 		s.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strings.Join(q.fields, `, `), q.table))
+// 		if len(q.wheres) > 0 {
+// 			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(q.wheres, ` AND `)))
+// 		}
+// 		if q.count > 0 {
+// 			s.WriteString(fmt.Sprintf(` LIMIT %d, %d`, q.start, q.count))
+// 		}
+// 	}
+// 	return s.String()
+// }

@@ -1,6 +1,14 @@
 package db
 
-import "github.com/eqto/go-db/query"
+import "log"
+
+var (
+	logE = log.Println
+)
+
+func Log(e func(...interface{})) {
+	logE = e
+}
 
 //Connect ...
 func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {
@@ -14,6 +22,10 @@ func Connect(driver, host string, port int, username, password, name string) (*C
 	return cn, nil
 }
 
-func BuildQuery() *query.Builder {
-
+func Query(driverName string) *QueryBuilder {
+	drv, e := getDriver(driverName)
+	if e != nil {
+		logE(e)
+	}
+	return &QueryBuilder{drv: drv}
 }
