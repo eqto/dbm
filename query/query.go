@@ -1,4 +1,4 @@
-package db
+package query
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	modeSelect = iota
-	modeInsert
-	modeDelete
+	ModeSelect = iota
+	ModeInsert
+	ModeDelete
 )
 
-type Q struct {
+type Builder struct {
 	driverName   string
 	mode         int
 	table        string
@@ -23,12 +23,12 @@ type Q struct {
 	start, count int
 }
 
-func (q *Q) InsertInto(table string) *Q {
-	q.mode, q.table = modeInsert, table
-	return q
+func (b *Builder) InsertInto(table string, fields ...string) *Builder {
+	b.mode, b.table = ModeInsert, table
+	return b
 }
 
-func (q *Q) Select(fields ...string) *Q {
+func (q *Builder) Select(fields ...string) *Builder {
 	if len(fields) == 1 {
 		split := strings.Split(fields[0], `,`)
 		for idx, str := range split {
@@ -40,17 +40,17 @@ func (q *Q) Select(fields ...string) *Q {
 	return q
 }
 
-func (q *Q) From(table string) *Q {
-	q.mode, q.table = modeSelect, table
+func (q *Builder) From(table string) *Builder {
+	q.mode, q.table = ModeSelect, table
 	return q
 }
 
-func (q *Q) Where(query string, value interface{}) *Q {
+func (q *Builder) Where(query string, value interface{}) *Builder {
 	q.wheres, q.values = append(q.wheres, query), append(q.values, value)
 	return q
 }
 
-func (q *Q) Limit(number ...int) *Q {
+func (q *Builder) Limit(number ...int) *Builder {
 	if len(number) == 1 {
 		q.count = number[0]
 	} else if len(number) == 2 {
@@ -60,7 +60,7 @@ func (q *Q) Limit(number ...int) *Q {
 }
 
 //Output used by sqlserver
-func (q *Q) Output(keys ...string) *Q {
+func (q *Builder) Output(keys ...string) *Builder {
 	if len(keys) == 1 {
 		split := strings.Split(keys[0], `,`)
 		for idx, str := range split {
@@ -72,7 +72,7 @@ func (q *Q) Output(keys ...string) *Q {
 	return q
 }
 
-func (q *Q) ValueMap(values map[string]interface{}) *Q {
+func (q *Builder) ValueMap(values map[string]interface{}) *Builder {
 	for key, val := range values {
 		q.keys = append(q.keys, key)
 		q.values = append(q.values, val)
@@ -80,16 +80,16 @@ func (q *Q) ValueMap(values map[string]interface{}) *Q {
 	return q
 }
 
-func (q *Q) Value(key string, value interface{}) *Q {
+func (q *Builder) Value(key string, value interface{}) *Builder {
 	q.keys = append(q.keys, key)
 	q.values = append(q.values, value)
 	return q
 }
 
-func (q *Q) String() string {
+func (q *Builder) String() string {
 	s := strings.Builder{}
 	switch q.mode {
-	case modeInsert:
+	case ModeInsert:
 		values := []string{}
 		s.WriteString(`INSERT INTO ` + q.table)
 		if len(q.keys) > 0 {
@@ -112,9 +112,9 @@ func (q *Q) String() string {
 					outputs = append(outputs, `DELETED`+output[7:])
 				} else {
 					switch q.mode {
-					case modeInsert:
+					case ModeInsert:
 						outputs = append(outputs, `INSERTED.`+output)
-					case modeDelete:
+					case ModeDelete:
 						outputs = append(outputs, `DELETED.`+output)
 					}
 				}
@@ -122,7 +122,7 @@ func (q *Q) String() string {
 			}
 		}
 		s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
-	case modeSelect:
+	case ModeSelect:
 		s.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strings.Join(q.fields, `, `), q.table))
 		if len(q.wheres) > 0 {
 			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(q.wheres, ` AND `)))
@@ -134,6 +134,6 @@ func (q *Q) String() string {
 	return s.String()
 }
 
-func Query(driverName string) *Q {
-	return &Q{driverName: driverName}
+func Build(driverName string) *Builder {
+	return &Builder{driverName: driverName}
 }

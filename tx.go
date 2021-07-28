@@ -5,13 +5,11 @@ import (
 	"errors"
 	"reflect"
 	"time"
-
-	"github.com/eqto/go-db/driver"
 )
 
 //Tx ...
 type Tx struct {
-	drv    *driver.Driver
+	drv    Driver
 	sqlTx  *sql.Tx
 	finish bool
 }
@@ -154,17 +152,6 @@ func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 	return rs[0], nil
 }
 
-//Get ...
-func (t *Tx) GetByQuery(q *Q) (Resultset, error) {
-	rs, e := t.Select(q.String(), q.values...)
-	if e != nil {
-		return nil, e
-	} else if rs == nil {
-		return nil, nil
-	}
-	return rs[0], nil
-}
-
 //MustGet ...
 func (t *Tx) MustGet(query string, params ...interface{}) Resultset {
 	rs, e := t.Get(query, params...)
@@ -185,6 +172,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 	if e != nil {
 		return e
 	}
+	println(rs)
 	if rs == nil || len(rs) == 0 {
 		return newSQLError(t.drv, errNotFound)
 	}
@@ -273,15 +261,20 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	length := len(dataMap)
-	fields := make([]string, length)
-	values := make([]interface{}, length)
-	idx := 0
-	for name, value := range dataMap {
-		fields[idx] = name
-		values[idx] = value
-		idx++
-	}
-	query := t.drv.InsertQuery(tableName, fields)
-	return t.Exec(query, values...)
+	// length := len(dataMap)
+	// fields := make([]string, length)
+	// values := make([]interface{}, length)
+	// idx := 0
+	// for name, value := range dataMap {
+	// 	fields[idx] = name
+	// 	values[idx] = value
+	// 	idx++
+	// }
+
+	// q := query.Build(t.drv.Name())
+	// q.InsertInto(tableName).
+
+	// query := t.drv.InsertQuery(tableName, fields)
+	// return t.Exec(query, values...)
+	return nil, nil
 }

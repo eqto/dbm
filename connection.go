@@ -6,8 +6,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/eqto/go-db/driver"
 )
 
 //Connection ...
@@ -19,12 +17,12 @@ type Connection struct {
 	username string
 	password string
 	name     string
-	driver   *driver.Driver
+	driver   Driver
 }
 
 //Connect ...
 func (c *Connection) Connect() error {
-	db, e := sql.Open(c.driver.Name, c.driver.ConnectionString(c.hostname, c.port, c.username, c.password, c.name))
+	db, e := sql.Open(c.driver.Name(), c.driver.DataSourceName(c.hostname, c.port, c.username, c.password, c.name))
 	if e != nil {
 		return e
 	}
@@ -102,16 +100,6 @@ func (c *Connection) Get(query string, params ...interface{}) (Resultset, error)
 	defer tx.Recover()
 
 	return tx.Get(query, params...)
-}
-
-//GetQuery ...
-func (c *Connection) GetQuery(q *Q) (Resultset, error) {
-	tx, e := c.Begin()
-	if e != nil {
-		return nil, e
-	}
-	defer tx.Recover()
-	return tx.GetByQuery(q)
 }
 
 //MustGet ...
@@ -212,7 +200,8 @@ func newConnection(driverName, hostname string, port int, username, password, na
 	if port < 0 || port > 65535 {
 		return nil, fmt.Errorf(`invalid port %d`, port)
 	}
-	drv, e := driver.Get(driverName)
+
+	drv, e := getDriver(driverName)
 	if e != nil {
 		return nil, e
 	}

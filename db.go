@@ -1,5 +1,7 @@
 package db
 
+import "github.com/eqto/go-db/query"
+
 //Connect ...
 func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {
 	cn, e := newConnection(driver, host, port, username, password, name)
@@ -10,4 +12,8 @@ func Connect(driver, host string, port int, username, password, name string) (*C
 		return nil, e
 	}
 	return cn, nil
+}
+
+func BuildQuery() *query.Builder {
+
 }

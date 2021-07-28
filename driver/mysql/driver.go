@@ -7,18 +7,37 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eqto/go-db/driver"
+	"github.com/eqto/go-db"
+	"github.com/eqto/go-db/query"
+	log "github.com/eqto/go-logger"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func init() {
-	driver.Register(`mysql`, &mysql{})
+	db.Register(`mysql`, &driver{})
+	// driver.Register(`mysql`, &mysql{})
 }
 
-type mysql struct {
+type driver struct {
+	db.Driver
 }
 
-func (*mysql) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
+func (*driver) Name() string {
+	return `mysql`
+}
+
+func (*driver) DataSourceName(hostname string, port int, username, password, name string) string {
+	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
+		username, password,
+		hostname, port,
+		name,
+	)
+}
+func (*driver) IsDuplicate(msg string) bool {
+	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
+}
+
+func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	vals := make([]interface{}, len(colTypes))
 	for idx, colType := range colTypes {
 		scanType := colType.ScanType()
@@ -71,25 +90,30 @@ func (*mysql) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	return vals, nil
 }
 
-func (*mysql) ConnectionString(hostname string, port int, username, password, name string) string {
-	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
-		username, password,
-		hostname, port,
-		name,
-	)
-}
-
-func (*mysql) InsertQuery(tableName string, fields []string) string {
-	values := make([]string, len(fields))
-	for i := range values {
-		values[i] = `?`
+func BuildQuery(q *query.Param) string {
+	s := strings.Builder{}
+	println(q.Mode())
+	switch q.Mode() {
+	case query.ModeInsert:
+		values := []string{}
+		s.WriteString(`INSERT INTO ` + q.Table())
+		if len(q.Keys()) > 0 {
+			s.WriteString(`(` + strings.Join(q.Keys(), `, `) + `)`)
+			values = append(values, `?`)
+		}
+		s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
+	case query.ModeSelect:
+		strFields := strings.Join(q.Fields(), `, `)
+		if strFields == `` {
+			strFields = `*`
+		}
+		s.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strFields, q.Table()))
+		if len(q.Wheres()) > 0 {
+			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(q.Wheres(), ` AND `)))
+		}
+		if q.Count() > 0 {
+			s.WriteString(fmt.Sprintf(` LIMIT %d, %d`, q.Start(), q.Count()))
+		}
 	}
-	return fmt.Sprintf("INSERT INTO `%s`(`%s`) VALUES(%s)",
-		tableName,
-		strings.Join(fields, "`, `"),
-		strings.Join(values, `, `))
-}
-
-func (*mysql) IsDuplicate(msg string) bool {
-	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
+	return s.String()
 }
