@@ -8,6 +8,10 @@ func TableOf(stmt interface{}) []Table {
 		if stmt.table != nil {
 			return []Table{*stmt.table}
 		}
+	case *UpdateStmt:
+		if stmt.table != nil {
+			return []Table{*stmt.table}
+		}
 	}
 	return nil
 }

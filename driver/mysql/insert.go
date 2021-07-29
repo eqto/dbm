@@ -13,11 +13,17 @@ func queryInsert(stmt *query.InsertStmt) string {
 		return ``
 	}
 	table := tables[0]
-	fields := []string{}
-	values := []string{}
-	for _, field := range table.Fields {
-		fields = append(fields, field.Name)
-		values = append(values, `?`)
+	fieldStrs := []string{}
+	valueStrs := []string{}
+	values := query.ValueOf(stmt)
+
+	for i, field := range table.Fields {
+		fieldStrs = append(fieldStrs, field.Name)
+		if len(values) > i {
+			valueStrs = append(valueStrs, values[i])
+		} else {
+			valueStrs = append(valueStrs, `?`)
+		}
 	}
-	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, tables[0].Name, strings.Join(fields, `, `), strings.Join(values, `, `))
+	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, tables[0].Name, strings.Join(fieldStrs, `, `), strings.Join(valueStrs, `, `))
 }

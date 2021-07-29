@@ -111,13 +111,6 @@ func (q *QueryBuilder) Value(key string, value interface{}) *QueryBuilder {
 	return q
 }
 
-func (q *QueryBuilder) String() string {
-	if q.drv == nil {
-		return ``
-	}
-	return q.drv.BuildQuery(QueryParameter{q})
-}
-
 func New(drv Driver) *QueryBuilder {
 	return &QueryBuilder{drv: drv}
 }

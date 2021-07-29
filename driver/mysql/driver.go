@@ -25,6 +25,8 @@ func (Driver) Query(stmt interface{}) string {
 		return querySelect(stmt)
 	case *query.InsertStmt:
 		return queryInsert(stmt)
+	case *query.UpdateStmt:
+		return queryUpdate(stmt)
 	}
 	return ``
 }

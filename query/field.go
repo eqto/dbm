@@ -3,8 +3,9 @@ package query
 import "strings"
 
 type Field struct {
-	Name  string
-	Alias string
+	Name        string
+	Alias       string
+	Placeholder string //used by update
 }
 
 func parseFields(query string) []Field {
