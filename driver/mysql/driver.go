@@ -5,36 +5,43 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
 
 	"github.com/eqto/go-db"
+	"github.com/eqto/go-db/query"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func init() {
-	db.Register(`mysql`, &driver{})
+	db.Register(`mysql`, &Driver{})
 }
 
-type driver struct {
+type Driver struct {
 	db.Driver
 }
 
-func (*driver) Name() string {
+func (Driver) Query(stmt interface{}) string {
+	if stmt, ok := stmt.(*query.SelectStmt); ok {
+		return querySelect(stmt)
+	}
+	return ``
+}
+
+func (Driver) Name() string {
 	return `mysql`
 }
 
-func (*driver) DataSourceName(hostname string, port int, username, password, name string) string {
+func (Driver) DataSourceName(hostname string, port int, username, password, name string) string {
 	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
 		username, password,
 		hostname, port,
 		name,
 	)
 }
-func (*driver) IsDuplicate(msg string) bool {
+func (Driver) IsDuplicate(msg string) bool {
 	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
 }
 
-func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
+func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	vals := make([]interface{}, len(colTypes))
 	for idx, colType := range colTypes {
 		scanType := colType.ScanType()
@@ -85,37 +92,4 @@ func (*driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) 
 		}
 	}
 	return vals, nil
-}
-
-func (*driver) BuildQuery(param db.QueryParameter) string {
-	s := strings.Builder{}
-	println(param.Mode())
-	switch param.Mode() {
-	case db.ModeInsert:
-		// values := []string{}
-		// s.WriteString(`INSERT INTO ` + param.Table())
-		// if len(param.Keys()) > 0 {
-		// 	s.WriteString(`(` + strings.Join(param.Keys(), `, `) + `)`)
-		// 	values = append(values, `?`)
-		// }
-		// s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
-	case db.ModeSelect:
-		fields := []string{}
-		for _, field := range param.Fields() {
-			fields = append(fields, field.String())
-		}
-
-		strFields := strings.Join(fields, `, `)
-		if strFields == `` {
-			strFields = `*`
-		}
-		s.WriteString(fmt.Sprintf("SELECT %s FROM %s", strFields, param.Table().String()))
-		if len(param.Wheres()) > 0 {
-			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(param.Wheres(), ` AND `)))
-		}
-		if param.Count() > 0 {
-			s.WriteString(fmt.Sprintf(` LIMIT %d, %d`, param.Start(), param.Count()))
-		}
-	}
-	return s.String()
 }
