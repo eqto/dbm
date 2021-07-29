@@ -32,3 +32,10 @@ func LimitOf(stmt interface{}) (int, int) {
 	}
 	return 0, 0
 }
+
+func ValueOf(stmt interface{}) []string {
+	if stmt, ok := stmt.(*InsertStmt); ok {
+		return stmt.values
+	}
+	return nil
+}
