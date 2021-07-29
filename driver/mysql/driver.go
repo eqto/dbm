@@ -20,8 +20,11 @@ type Driver struct {
 }
 
 func (Driver) Query(stmt interface{}) string {
-	if stmt, ok := stmt.(*query.SelectStmt); ok {
+	switch stmt := stmt.(type) {
+	case *query.SelectStmt:
 		return querySelect(stmt)
+	case *query.InsertStmt:
+		return queryInsert(stmt)
 	}
 	return ``
 }

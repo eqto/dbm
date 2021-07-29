@@ -1,8 +1,13 @@
 package query
 
 func TableOf(stmt interface{}) []Table {
-	if stmt, ok := stmt.(*SelectStmt); ok {
+	switch stmt := stmt.(type) {
+	case *SelectStmt:
 		return stmt.tables
+	case *InsertStmt:
+		if stmt.table != nil {
+			return []Table{*stmt.table}
+		}
 	}
 	return nil
 }
