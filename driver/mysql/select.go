@@ -12,6 +12,7 @@ func querySelect(stmt *query.SelectStmt) string {
 
 	fields := []string{}
 	tables := []string{}
+
 	for i, table := range query.TableOf(stmt) {
 		for _, field := range table.Fields {
 			if field.Alias != `` {
@@ -34,7 +35,7 @@ func querySelect(stmt *query.SelectStmt) string {
 
 	strs := query.WhereOf(stmt)
 	if len(strs) > 0 {
-		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(strs, ` AND `)))
+		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(strs, ` `)))
 	}
 	strs = query.OrderByOf(stmt)
 	if len(strs) > 0 {

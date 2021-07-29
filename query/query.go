@@ -16,16 +16,26 @@ func TableOf(stmt interface{}) []Table {
 	return nil
 }
 
+func StatementOf(q interface{}) interface{} {
+	switch q := q.(type) {
+	case *Where:
+		return q.stmt
+	case *OrderBy:
+		return q.stmt
+	}
+	return q
+}
+
 func WhereOf(stmt interface{}) []string {
-	if stmt, ok := stmt.(*SelectStmt); ok {
-		return stmt.wheres
+	if stmt, ok := stmt.(*SelectStmt); ok && stmt.where != nil {
+		return stmt.where.conditions
 	}
 	return nil
 }
 
 func OrderByOf(stmt interface{}) []string {
-	if stmt, ok := stmt.(*SelectStmt); ok {
-		return stmt.orders
+	if stmt, ok := stmt.(*SelectStmt); ok && stmt.orderBy != nil {
+		return stmt.orderBy.orders
 	}
 	return nil
 }

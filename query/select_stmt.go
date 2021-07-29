@@ -1,14 +1,16 @@
 package query
 
-import "strings"
+import (
+	"strings"
+)
 
 type SelectStmt struct {
-	fields []Field
-	tables []Table
-	wheres []string
-	orders []string
-	offset int
-	count  int
+	fields  []Field
+	tables  []Table
+	where   *Where
+	orderBy *OrderBy
+	offset  int
+	count   int
 }
 
 //From table name with or without alias.
@@ -32,24 +34,29 @@ func (s *SelectStmt) InnerJoin(table, condition string) *SelectStmt {
 	return s
 }
 
-func (s *SelectStmt) Where(condition string) *SelectStmt {
-	s.wheres = append(s.wheres, strings.TrimSpace(condition))
-	return s
+func (s *SelectStmt) Where(condition string) *Where {
+	s.where = &Where{stmt: s, orderFunc: s.OrderBy, conditions: []string{condition}}
+	return s.where
 }
 
 //OrderBy
 //query: "title" => Select books.* From books ORDER BY title
 //query: "title DESC" => Select books.* From books ORDER BY title DESC
-func (s *SelectStmt) OrderBy(order string) *SelectStmt {
-	s.orders = append(s.orders, strings.TrimSpace(order))
-	return s
+func (s *SelectStmt) OrderBy(order string) *OrderBy {
+	o := OrderBy{stmt: s, limitFunc: s.Limit}
+	split := strings.Split(order, `,`)
+	for _, order := range split {
+		o.orders = append(o.orders, strings.TrimSpace(order))
+	}
+	s.orderBy = &o
+	return s.orderBy
 }
 
 //Limit used by MySQL. Parameters 'num' can be single int for "LIMIT n" or double for "LIMIT n1, n2"
 //Ex:
 //SELECT * FROM books LIMIT 1. offset = 0, length = 1
 //SELECT * FROM books LIMIT 0, 10. offset = 0, length = 10
-func (s *SelectStmt) Limit(num ...int) *SelectStmt {
+func (s *SelectStmt) Limit(num ...int) interface{} {
 	if len(num) > 1 {
 		s.offset = num[0]
 		s.count = num[1]

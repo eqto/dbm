@@ -20,6 +20,7 @@ type Driver struct {
 }
 
 func (Driver) Query(stmt interface{}) string {
+	stmt = query.StatementOf(stmt)
 	switch stmt := stmt.(type) {
 	case *query.SelectStmt:
 		return querySelect(stmt)
