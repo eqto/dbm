@@ -1,27 +1,33 @@
 package query
 
-func TableOf(stmt interface{}) []Table {
-	switch stmt := stmt.(type) {
-	case *SelectStmt:
-		return stmt.tables
-	case *InsertStmt:
-		if stmt.table != nil {
-			return []Table{*stmt.table}
-		}
-	case *UpdateStmt:
-		if stmt.table != nil {
-			return []Table{*stmt.table}
-		}
+func TableStmtOf(stmt *SelectStmt) *TableStmt {
+	return stmt.tableStmt
+}
+
+func TableOf(stmt *TableStmt) Table {
+	return stmt.table
+}
+
+func JoinOf(stmt *TableStmt) *TableStmt {
+	return stmt.join
+}
+
+func FieldsOf(stmt interface{}) []Field {
+	stmt = StatementOf(stmt)
+	if stmt, ok := stmt.(*SelectStmt); ok {
+		return stmt.fields
 	}
 	return nil
 }
 
 func StatementOf(q interface{}) interface{} {
 	switch q := q.(type) {
-	case *Where:
+	case *TableStmt:
 		return q.stmt
-	case *OrderBy:
-		return q.stmt
+	case *WhereStmt:
+		return q.table.stmt
+	case *OrderByStmt:
+		return q.table.stmt
 	}
 	return q
 }
@@ -52,4 +58,30 @@ func ValueOf(stmt interface{}) []string {
 		return stmt.values
 	}
 	return nil
+}
+
+func assignWhere(stmt interface{}, where *WhereStmt) {
+	switch stmt := stmt.(type) {
+	case *SelectStmt:
+		stmt.where = where
+	}
+}
+
+func assignOrderBy(stmt interface{}, orderBy *OrderByStmt) {
+	switch stmt := stmt.(type) {
+	case *SelectStmt:
+		stmt.orderBy = orderBy
+	}
+}
+
+func assignLimit(stmt interface{}, num ...int) {
+	switch stmt := stmt.(type) {
+	case *SelectStmt:
+		switch len(num) {
+		case 1:
+			stmt.count = num[0]
+		case 2:
+			stmt.offset, stmt.count = num[0], num[1]
+		}
+	}
 }

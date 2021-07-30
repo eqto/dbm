@@ -13,25 +13,36 @@ func querySelect(stmt *query.SelectStmt) string {
 	fields := []string{}
 	tables := []string{}
 
-	for i, table := range query.TableOf(stmt) {
-		for _, field := range table.Fields {
+	tableStmt := query.TableStmtOf(stmt)
+	for {
+		for _, field := range query.FieldsOf(stmt) {
 			if field.Alias != `` {
 				fields = append(fields, fmt.Sprintf(`%s AS %s`, field.Name, field.Alias))
 			} else {
 				fields = append(fields, field.Name)
 			}
 		}
+		table := query.TableOf(tableStmt)
 		tableStr := table.Name
 		if table.Alias != `` {
 			tableStr += ` ` + table.Alias
 		}
-		if i == 0 {
+		if len(tables) == 0 {
 			tables = append(tables, tableStr)
 		} else {
 			tables = append(tables, fmt.Sprintf(`INNER JOIN %s ON %s`, tableStr, table.Condition))
 		}
+
+		tableStmt = query.JoinOf(tableStmt)
+		if tableStmt == nil {
+			break
+		}
 	}
-	sql.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strings.Join(fields, `, `), strings.Join(tables, ` `)))
+	strFields := strings.Join(fields, `, `)
+	if strFields == `` {
+		strFields = `*`
+	}
+	sql.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strFields, strings.Join(tables, ` `)))
 
 	strs := query.WhereOf(stmt)
 	if len(strs) > 0 {
