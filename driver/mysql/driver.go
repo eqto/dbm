@@ -19,6 +19,10 @@ type Driver struct {
 	db.Driver
 }
 
+func (Driver) Name() string {
+	return `mysql`
+}
+
 func (Driver) Query(stmt interface{}) string {
 	stmt = query.StatementOf(stmt)
 	switch stmt := stmt.(type) {
@@ -30,10 +34,6 @@ func (Driver) Query(stmt interface{}) string {
 		return queryUpdate(stmt)
 	}
 	return ``
-}
-
-func (Driver) Name() string {
-	return `mysql`
 }
 
 func (Driver) DataSourceName(hostname string, port int, username, password, name string) string {

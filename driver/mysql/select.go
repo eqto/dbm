@@ -44,16 +44,14 @@ func querySelect(stmt *query.SelectStmt) string {
 	}
 	sql.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strFields, strings.Join(tables, ` `)))
 
-	strs := query.WhereOf(stmt)
-	if len(strs) > 0 {
-		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(strs, ` `)))
+	if wheres := query.WhereOf(stmt); len(wheres) > 0 {
+		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(wheres, ` `)))
 	}
-	strs = query.OrderByOf(stmt)
-	if len(strs) > 0 {
-		sql.WriteString(fmt.Sprintf(` ORDER BY %s`, strings.Join(strs, `, `)))
+	if orderBys := query.OrderByOf(stmt); len(orderBys) > 0 {
+		sql.WriteString(fmt.Sprintf(` ORDER BY %s`, strings.Join(orderBys, `, `)))
 	}
-	offset, count := query.LimitOf(stmt)
-	if count > 0 {
+
+	if offset, count := query.LimitOf(stmt); count > 0 {
 		sql.WriteString(fmt.Sprintf(` LIMIT %d, %d`, offset, count))
 	}
 	return sql.String()
