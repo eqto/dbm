@@ -8,27 +8,16 @@ import (
 )
 
 func queryUpdate(stmt *query.UpdateStmt) string {
-	tables := query.TableOf(stmt)
-	if len(tables) == 0 {
-		return ``
-	}
-	table := tables[0]
+	table := query.TableOf(stmt)
 	fieldStrs := []string{}
 	for _, field := range table.Fields {
 		fieldStrs = append(fieldStrs, field.Name+` = `+field.Placeholder)
 	}
+	sql := strings.Builder{}
+	sql.WriteString(fmt.Sprintf(`UPDATE %s SET %s`, table.Name, strings.Join(fieldStrs, `, `)))
+	if conditions := query.WhereOf(stmt); len(conditions) > 0 {
+		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(conditions, ` `)))
+	}
 
-	return fmt.Sprintf(`UPDATE %s SET %s`, table.Name, strings.Join(fieldStrs, `, `))
-	// valueStrs := []string{}
-	// values := query.ValueOf(stmt)
-
-	// for i, field := range table.Fields {
-	// 	fieldStrs = append(fieldStrs, field.Name)
-	// 	if len(values) > i {
-	// 		valueStrs = append(valueStrs, values[i])
-	// 	} else {
-	// 		valueStrs = append(valueStrs, `?`)
-	// 	}
-	// }
-	// return fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, tables[0].Name, strings.Join(fieldStrs, `, `), strings.Join(valueStrs, `, `))
+	return sql.String()
 }

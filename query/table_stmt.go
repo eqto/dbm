@@ -2,7 +2,7 @@
  * @Author: tuxer
  * @Date: 2021-07-29 12:42:08
  * @Last Modified by: tuxer
- * @Last Modified time: 2021-07-30 10:31:54
+ * @Last Modified time: 2021-07-30 12:38:22
  */
 
 package query
@@ -32,7 +32,7 @@ func (t *TableStmt) InnerJoin(table, condition string) *TableStmt {
 }
 
 func (t *TableStmt) Where(condition string) *WhereStmt {
-	where := &WhereStmt{table: t, conditions: []string{condition}}
+	where := &WhereStmt{ConditionStmt: ConditionStmt{stmt: t, conditions: []string{condition}}}
 	assignWhere(t.stmt, where)
 	return where
 }

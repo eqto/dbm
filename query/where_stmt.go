@@ -1,20 +1,19 @@
 package query
 
 type WhereStmt struct {
-	table      *TableStmt
-	conditions []string
+	ConditionStmt
 }
 
 func (w *WhereStmt) And(query string) *WhereStmt {
-	w.conditions = append(w.conditions, `AND `+query)
+	w.ConditionStmt.And(query)
 	return w
 }
 
 func (w *WhereStmt) Or(query string) *WhereStmt {
-	w.conditions = append(w.conditions, `OR `+query)
+	w.ConditionStmt.Or(query)
 	return w
 }
 
 func (w *WhereStmt) OrderBy(order string) *OrderByStmt {
-	return w.table.OrderBy(order)
+	return w.ConditionStmt.stmt.(*TableStmt).OrderBy(order)
 }

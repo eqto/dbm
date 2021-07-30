@@ -3,7 +3,8 @@ package query
 import "strings"
 
 type UpdateStmt struct {
-	table *Table
+	table     Table
+	condition *ConditionStmt
 }
 
 func (u *UpdateStmt) Set(query string) *UpdateStmt {
@@ -12,6 +13,14 @@ func (u *UpdateStmt) Set(query string) *UpdateStmt {
 		u.set(str)
 	}
 	return u
+}
+
+func (u *UpdateStmt) Where(condition string) *ConditionStmt {
+	if u.condition == nil {
+		u.condition = &ConditionStmt{stmt: u}
+	}
+	u.condition.conditions = append(u.condition.conditions, condition)
+	return u.condition
 }
 
 func (u *UpdateStmt) set(query string) {
@@ -26,6 +35,5 @@ func (u *UpdateStmt) set(query string) {
 }
 
 func Update(table string) *UpdateStmt {
-	t := &Table{Name: table}
-	return &UpdateStmt{table: t}
+	return &UpdateStmt{table: Table{Name: table}}
 }

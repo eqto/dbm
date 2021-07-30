@@ -10,6 +10,8 @@ func TableOf(stmt interface{}) Table {
 		return stmt.table
 	case *InsertStmt:
 		return stmt.table
+	case *UpdateStmt:
+		return stmt.table
 	}
 	return Table{}
 }
@@ -31,16 +33,25 @@ func StatementOf(q interface{}) interface{} {
 	case *TableStmt:
 		return q.stmt
 	case *WhereStmt:
-		return q.table.stmt
+		return q.ConditionStmt.stmt
 	case *OrderByStmt:
 		return q.table.stmt
+	case *ConditionStmt:
+		return q.stmt
 	}
 	return q
 }
 
 func WhereOf(stmt interface{}) []string {
-	if stmt, ok := stmt.(*SelectStmt); ok && stmt.where != nil {
-		return stmt.where.conditions
+	switch stmt := stmt.(type) {
+	case *SelectStmt:
+		if stmt.where != nil {
+			return stmt.where.conditions
+		}
+	case *UpdateStmt:
+		if stmt.condition != nil {
+			return stmt.condition.conditions
+		}
 	}
 	return nil
 }
