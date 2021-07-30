@@ -15,7 +15,7 @@ type SelectStmt struct {
 //Without alias => "Select books.* From books"
 //With alias => "Select b.* From books b"
 func (s *SelectStmt) From(table string) *TableStmt {
-	s.tableStmt = parseTable(s, table, s.fields)
+	s.tableStmt = parseTable(s, table)
 	return s.tableStmt
 }
 

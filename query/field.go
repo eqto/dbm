@@ -10,7 +10,7 @@ type Field struct {
 
 func parseFields(query string) []Field {
 	fields := []Field{}
-	split := strings.Split(query, `,`)
+	split := strings.Split(strings.TrimSpace(query), `,`)
 	for _, s := range split {
 		split := strings.SplitN(s, ` AS `, 2)
 		field := Field{}

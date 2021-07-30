@@ -17,15 +17,11 @@ func TableOf(stmt interface{}) Table {
 }
 
 func JoinOf(stmt *TableStmt) *TableStmt {
-	return stmt.join
+	return stmt.joinTo
 }
 
-func FieldsOf(stmt interface{}) []Field {
-	stmt = StatementOf(stmt)
-	if stmt, ok := stmt.(*SelectStmt); ok {
-		return stmt.fields
-	}
-	return nil
+func FieldsOf(stmt *SelectStmt) []Field {
+	return stmt.fields
 }
 
 func StatementOf(q interface{}) interface{} {

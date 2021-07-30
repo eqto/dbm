@@ -2,7 +2,7 @@
  * @Author: tuxer
  * @Date: 2021-07-29 12:42:08
  * @Last Modified by: tuxer
- * @Last Modified time: 2021-07-30 16:09:35
+ * @Last Modified time: 2021-07-31 04:09:33
  */
 
 package query
@@ -19,16 +19,29 @@ type Table struct {
 }
 
 type TableStmt struct {
-	stmt  interface{}
-	table Table
-	join  *TableStmt
+	stmt     interface{}
+	table    Table
+	joinTo   *TableStmt
+	joinKind string
 }
 
 func (t *TableStmt) InnerJoin(table, condition string) *TableStmt {
-	fields := FieldsOf(t.stmt)
-	t.join = parseTable(t.stmt, table, fields)
-	t.join.table.Condition = condition
-	return t.join
+	return t.join(`INNER`, table, condition)
+}
+
+func (t *TableStmt) LeftJoin(table, condition string) *TableStmt {
+	return t.join(`LEFT`, table, condition)
+}
+
+func (t *TableStmt) RightJoin(table, condition string) *TableStmt {
+	return t.join(`RIGHT`, table, condition)
+}
+
+func (t *TableStmt) join(joinKind, table, condition string) *TableStmt {
+	t.joinTo = parseTable(t.stmt, table)
+	t.joinTo.table.Condition = condition
+	t.joinKind = joinKind
+	return t.joinTo
 }
 
 func (t *TableStmt) Where(condition string) *WhereStmt {
@@ -70,22 +83,14 @@ func (t *TableStmt) Limit(num ...int) *TableStmt {
 	return t
 }
 
-func parseTable(stmt interface{}, query string, fields []Field) *TableStmt {
+func parseTable(stmt interface{}, query string) *TableStmt {
 	tableStmt := &TableStmt{stmt: stmt}
 	split := strings.SplitN(query, ` `, 2)
-	prefix := ``
 	table := Table{}
 	if len(split) == 2 {
 		table.Name, table.Alias = strings.TrimSpace(split[0]), strings.TrimSpace(split[1])
-		prefix = table.Alias + `.`
 	} else {
 		table.Name = strings.TrimSpace(query)
-		prefix = table.Name + `.`
-	}
-	for _, field := range fields {
-		if strings.HasPrefix(field.Name, prefix) {
-			table.Fields = append(table.Fields, field)
-		}
 	}
 	tableStmt.table = table
 	return tableStmt

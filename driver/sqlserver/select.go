@@ -13,15 +13,16 @@ func querySelect(stmt *query.SelectStmt) string {
 	fields := []string{}
 	tables := []string{}
 
+	for _, field := range query.FieldsOf(stmt) {
+		if field.Alias != `` {
+			fields = append(fields, fmt.Sprintf(`%s AS %s`, field.Name, field.Alias))
+		} else {
+			fields = append(fields, field.Name)
+		}
+	}
+
 	tableStmt := query.TableStmtOf(stmt)
 	for {
-		for _, field := range query.FieldsOf(stmt) {
-			if field.Alias != `` {
-				fields = append(fields, fmt.Sprintf(`%s AS %s`, field.Name, field.Alias))
-			} else {
-				fields = append(fields, field.Name)
-			}
-		}
 		table := query.TableOf(tableStmt)
 		tableStr := table.Name
 		if table.Alias != `` {

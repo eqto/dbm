@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"reflect"
+	"strings"
 	"time"
+
+	"github.com/eqto/go-db/query"
 )
 
 //Tx ...
@@ -261,20 +264,15 @@ func (t *Tx) MustExec(query string, params ...interface{}) *Result {
 
 //Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	// length := len(dataMap)
-	// fields := make([]string, length)
-	// values := make([]interface{}, length)
-	// idx := 0
-	// for name, value := range dataMap {
-	// 	fields[idx] = name
-	// 	values[idx] = value
-	// 	idx++
-	// }
-
-	// q := query.Build(t.drv.Name())
-	// q.InsertInto(tableName).
-
-	// query := t.drv.InsertQuery(tableName, fields)
-	// return t.Exec(query, values...)
-	return nil, nil
+	length := len(dataMap)
+	fields := make([]string, length)
+	values := make([]interface{}, length)
+	idx := 0
+	for name, value := range dataMap {
+		fields[idx] = name
+		values[idx] = value
+		idx++
+	}
+	q := query.InsertInto(tableName, strings.Join(fields, `, `))
+	return t.Exec(t.drv.Query(q), values...)
 }
