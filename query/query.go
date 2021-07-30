@@ -4,8 +4,14 @@ func TableStmtOf(stmt *SelectStmt) *TableStmt {
 	return stmt.tableStmt
 }
 
-func TableOf(stmt *TableStmt) Table {
-	return stmt.table
+func TableOf(stmt interface{}) Table {
+	switch stmt := stmt.(type) {
+	case *TableStmt:
+		return stmt.table
+	case *InsertStmt:
+		return stmt.table
+	}
+	return Table{}
 }
 
 func JoinOf(stmt *TableStmt) *TableStmt {

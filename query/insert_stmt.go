@@ -3,7 +3,7 @@ package query
 import "strings"
 
 type InsertStmt struct {
-	table  *Table
+	table  Table
 	values []string
 }
 
@@ -18,6 +18,5 @@ func (i *InsertStmt) Values(query string) *InsertStmt {
 }
 
 func InsertInto(table string, fields string) *InsertStmt {
-	t := &Table{Name: table, Fields: parseFields(fields)}
-	return &InsertStmt{table: t}
+	return &InsertStmt{table: Table{Name: table, Fields: parseFields(fields)}}
 }

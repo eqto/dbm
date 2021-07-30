@@ -8,11 +8,8 @@ import (
 )
 
 func queryInsert(stmt *query.InsertStmt) string {
-	tables := query.TableOf(stmt)
-	if len(tables) == 0 {
-		return ``
-	}
-	table := tables[0]
+	table := query.TableOf(stmt)
+
 	fieldStrs := []string{}
 	valueStrs := []string{}
 	values := query.ValueOf(stmt)
@@ -25,5 +22,5 @@ func queryInsert(stmt *query.InsertStmt) string {
 			valueStrs = append(valueStrs, `?`)
 		}
 	}
-	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, tables[0].Name, strings.Join(fieldStrs, `, `), strings.Join(valueStrs, `, `))
+	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, table.Name, strings.Join(fieldStrs, `, `), strings.Join(valueStrs, `, `))
 }

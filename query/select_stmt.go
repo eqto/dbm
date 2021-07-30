@@ -4,7 +4,7 @@ type SelectStmt struct {
 	fields    []Field
 	tableStmt *TableStmt
 	where     *WhereStmt
-	orderBy   *OrderBy
+	orderBy   *OrderByStmt
 	offset    int
 	count     int
 }

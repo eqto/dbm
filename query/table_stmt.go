@@ -2,7 +2,7 @@
  * @Author: tuxer
  * @Date: 2021-07-29 12:42:08
  * @Last Modified by: tuxer
- * @Last Modified time: 2021-07-30 10:09:58
+ * @Last Modified time: 2021-07-30 10:31:54
  */
 
 package query
@@ -15,7 +15,7 @@ type Table struct {
 	Name      string
 	Alias     string
 	Condition string
-	fields    []Field
+	Fields    []Field
 }
 
 type TableStmt struct {
@@ -40,8 +40,8 @@ func (t *TableStmt) Where(condition string) *WhereStmt {
 //OrderBy
 //query: "title" => Select books.* From books ORDER BY title
 //query: "title DESC" => Select books.* From books ORDER BY title DESC
-func (t *TableStmt) OrderBy(order string) *OrderBy {
-	o := &OrderBy{table: t}
+func (t *TableStmt) OrderBy(order string) *OrderByStmt {
+	o := &OrderByStmt{table: t}
 	split := strings.Split(order, `,`)
 	for _, order := range split {
 		o.orders = append(o.orders, strings.TrimSpace(order))
@@ -73,7 +73,7 @@ func parseTable(stmt interface{}, query string, fields []Field) *TableStmt {
 	}
 	for _, field := range fields {
 		if strings.HasPrefix(field.Name, prefix) {
-			table.fields = append(table.fields, field)
+			table.Fields = append(table.Fields, field)
 		}
 	}
 	tableStmt.table = table
