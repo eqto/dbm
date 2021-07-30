@@ -6,15 +6,7 @@ import (
 	"strings"
 )
 
-type Statement interface {
-}
-
-type statement struct {
-	Statement
-	stmt interface{}
-}
-
-func Parse(query string) Statement {
+func ParseSelect(query string) *SelectStmt {
 	query = strings.TrimSpace(query)
 	if strings.HasPrefix(strings.ToUpper(query), `SELECT`) {
 		regex := regexp.MustCompile(`(?Uis)^SELECT\s+(?P<fields>.*)\s+FROM\s+(?P<tables>.*)(?:\s+WHERE\s+(?P<where>.*)|)(?:\s+GROUP BY\s+(?P<group>.*)|)(?:\s+ORDER\s+BY\s+(?P<order>.*)|)(?:\s+LIMIT\s+(?P<limit>.+)|)$`)
@@ -87,7 +79,7 @@ func Parse(query string) Statement {
 				}
 			}
 		}
-		return &statement{stmt: selectStmt}
+		return selectStmt
 	}
 	return nil
 }
