@@ -4,8 +4,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	log "github.com/eqto/go-logger"
 )
 
 type Statement interface {
@@ -33,7 +31,6 @@ func Parse(query string) Statement {
 			switch name {
 			case `fields`:
 				selectStmt = Select(match)
-				log.D(match)
 			case `tables`:
 				tablesRegex := regexp.MustCompile(`(?Uis)\s+(INNER|LEFT|RIGHT)\s+JOIN\s+`)
 				tables := tablesRegex.Split(match, -1)
