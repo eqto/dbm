@@ -47,6 +47,9 @@ func querySelect(stmt *query.SelectStmt) string {
 	if wheres := query.WhereOf(stmt); len(wheres) > 0 {
 		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(wheres, ` `)))
 	}
+	if groupBy := query.GroupByOf(stmt); len(groupBy) > 0 {
+		sql.WriteString(fmt.Sprintf(` GROUP BY %s`, strings.Join(groupBy, ` `)))
+	}
 	if orderBys := query.OrderByOf(stmt); len(orderBys) > 0 {
 		sql.WriteString(fmt.Sprintf(` ORDER BY %s`, strings.Join(orderBys, `, `)))
 	}

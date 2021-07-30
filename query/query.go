@@ -45,8 +45,8 @@ func StatementOf(q interface{}) interface{} {
 func WhereOf(stmt interface{}) []string {
 	switch stmt := stmt.(type) {
 	case *SelectStmt:
-		if stmt.where != nil {
-			return stmt.where.conditions
+		if stmt.whereStmt != nil {
+			return stmt.whereStmt.conditions
 		}
 	case *UpdateStmt:
 		if stmt.condition != nil {
@@ -56,9 +56,16 @@ func WhereOf(stmt interface{}) []string {
 	return nil
 }
 
+func GroupByOf(stmt interface{}) []string {
+	if stmt, ok := stmt.(*SelectStmt); ok && stmt.groupByStmt != nil {
+		return stmt.groupByStmt.groups
+	}
+	return nil
+}
+
 func OrderByOf(stmt interface{}) []string {
-	if stmt, ok := stmt.(*SelectStmt); ok && stmt.orderBy != nil {
-		return stmt.orderBy.orders
+	if stmt, ok := stmt.(*SelectStmt); ok && stmt.orderByStmt != nil {
+		return stmt.orderByStmt.orders
 	}
 	return nil
 }
@@ -80,14 +87,21 @@ func ValueOf(stmt interface{}) []string {
 func assignWhere(stmt interface{}, where *WhereStmt) {
 	switch stmt := stmt.(type) {
 	case *SelectStmt:
-		stmt.where = where
+		stmt.whereStmt = where
 	}
 }
 
 func assignOrderBy(stmt interface{}, orderBy *OrderByStmt) {
 	switch stmt := stmt.(type) {
 	case *SelectStmt:
-		stmt.orderBy = orderBy
+		stmt.orderByStmt = orderBy
+	}
+}
+
+func assignGroupBy(stmt interface{}, groupBy *GroupByStmt) {
+	switch stmt := stmt.(type) {
+	case *SelectStmt:
+		stmt.groupByStmt = groupBy
 	}
 }
 

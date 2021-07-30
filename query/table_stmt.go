@@ -2,7 +2,7 @@
  * @Author: tuxer
  * @Date: 2021-07-29 12:42:08
  * @Last Modified by: tuxer
- * @Last Modified time: 2021-07-30 12:38:22
+ * @Last Modified time: 2021-07-30 16:09:35
  */
 
 package query
@@ -37,12 +37,23 @@ func (t *TableStmt) Where(condition string) *WhereStmt {
 	return where
 }
 
+func (t *TableStmt) GroupBy(groupBy string) *GroupByStmt {
+	split := strings.Split(groupBy, `,`)
+	groups := []string{}
+	for _, s := range split {
+		groups = append(groups, strings.TrimSpace(s))
+	}
+	g := &GroupByStmt{groups: groups}
+	assignGroupBy(t.stmt, g)
+	return g
+}
+
 //OrderBy
 //query: "title" => Select books.* From books ORDER BY title
 //query: "title DESC" => Select books.* From books ORDER BY title DESC
-func (t *TableStmt) OrderBy(order string) *OrderByStmt {
+func (t *TableStmt) OrderBy(orders string) *OrderByStmt {
 	o := &OrderByStmt{table: t}
-	split := strings.Split(order, `,`)
+	split := strings.Split(orders, `,`)
 	for _, order := range split {
 		o.orders = append(o.orders, strings.TrimSpace(order))
 	}

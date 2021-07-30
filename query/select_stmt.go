@@ -1,12 +1,13 @@
 package query
 
 type SelectStmt struct {
-	fields    []Field
-	tableStmt *TableStmt
-	where     *WhereStmt
-	orderBy   *OrderByStmt
-	offset    int
-	count     int
+	fields      []Field
+	tableStmt   *TableStmt
+	whereStmt   *WhereStmt
+	orderByStmt *OrderByStmt
+	groupByStmt *GroupByStmt
+	offset      int
+	count       int
 }
 
 //From table name with or without alias.

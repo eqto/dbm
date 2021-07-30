@@ -14,6 +14,10 @@ func (w *WhereStmt) Or(query string) *WhereStmt {
 	return w
 }
 
-func (w *WhereStmt) OrderBy(order string) *OrderByStmt {
-	return w.ConditionStmt.stmt.(*TableStmt).OrderBy(order)
+func (w *WhereStmt) GroupBy(groupBy string) *GroupByStmt {
+	return w.stmt.(*TableStmt).GroupBy(groupBy)
+}
+
+func (w *WhereStmt) OrderBy(orderBy string) *OrderByStmt {
+	return w.ConditionStmt.stmt.(*TableStmt).OrderBy(orderBy)
 }
