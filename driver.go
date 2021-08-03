@@ -25,5 +25,5 @@ func getDriver(name string) (Driver, error) {
 	if d, ok := driverMap[name]; ok {
 		return d, nil
 	}
-	return nil, fmt.Errorf(`driver '%s' not supported or not registered. Import from github.com/go-db/driver`, name)
+	return nil, fmt.Errorf(`driver '%s' not supported or not registered. Import from github.com/dbq/driver`, name)
 }

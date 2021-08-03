@@ -1,3 +1,3 @@
-module github.com/eqto/go-db
+module github.com/eqto/dbq
 
 go 1.15
