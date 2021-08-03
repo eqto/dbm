@@ -37,7 +37,7 @@ func ParseSelect(query string) *SelectStmt {
 						joinKind := strings.ToUpper(delimiterRegex.FindString(delimiters[i-1]))
 						split := joinRegex.Split(table, 2)
 						if len(split) == 2 {
-							tableStmt.join(joinKind, strings.TrimSpace(split[0]), strings.TrimSpace(split[1]))
+							tableStmt.Join(joinKind, strings.TrimSpace(split[0]), strings.TrimSpace(split[1]))
 						}
 					}
 				}
@@ -45,7 +45,7 @@ func ParseSelect(query string) *SelectStmt {
 				whereRegex := regexp.MustCompile(`(?Uis)\s+(AND|OR)\s+`)
 				wheres := whereRegex.Split(match, -1)
 				delimiters := whereRegex.FindAllString(match, -1)
-				var whereStmt *WhereStmt
+				var whereStmt *Where
 				for i, where := range wheres {
 					if i == 0 {
 						whereStmt = tableStmt.Where(strings.TrimSpace(where))

@@ -1,16 +1,16 @@
 package query
 
-type ConditionStmt struct {
+type Condition struct {
 	stmt       interface{}
 	conditions []string
 }
 
-func (c *ConditionStmt) And(query string) *ConditionStmt {
+func (c *Condition) And(query string) *Condition {
 	c.conditions = append(c.conditions, `AND `+query)
 	return c
 }
 
-func (c *ConditionStmt) Or(query string) *ConditionStmt {
+func (c *Condition) Or(query string) *Condition {
 	c.conditions = append(c.conditions, `OR `+query)
 	return c
 }

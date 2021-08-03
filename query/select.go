@@ -3,9 +3,9 @@ package query
 type SelectStmt struct {
 	fields      []Field
 	tableStmt   *TableStmt
-	whereStmt   *WhereStmt
-	orderByStmt *OrderByStmt
-	groupByStmt *GroupByStmt
+	whereStmt   *Where
+	orderByStmt *OrderBy
+	groupByStmt *GroupBy
 	offset      int
 	count       int
 }
@@ -17,10 +17,4 @@ type SelectStmt struct {
 func (s *SelectStmt) From(table string) *TableStmt {
 	s.tableStmt = parseTable(s, table)
 	return s.tableStmt
-}
-
-func Select(query string) *SelectStmt {
-	return &SelectStmt{
-		fields: parseFields(query),
-	}
 }

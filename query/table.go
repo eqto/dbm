@@ -1,10 +1,3 @@
-/*
- * @Author: tuxer
- * @Date: 2021-07-29 12:42:08
- * @Last Modified by: tuxer
- * @Last Modified time: 2021-07-31 04:09:33
- */
-
 package query
 
 import (
@@ -25,38 +18,38 @@ type TableStmt struct {
 	joinKind string
 }
 
-func (t *TableStmt) InnerJoin(table, condition string) *TableStmt {
-	return t.join(`INNER`, table, condition)
-}
-
-func (t *TableStmt) LeftJoin(table, condition string) *TableStmt {
-	return t.join(`LEFT`, table, condition)
-}
-
-func (t *TableStmt) RightJoin(table, condition string) *TableStmt {
-	return t.join(`RIGHT`, table, condition)
-}
-
-func (t *TableStmt) join(joinKind, table, condition string) *TableStmt {
+func (t *TableStmt) Join(joinKind, table, condition string) *TableStmt {
 	t.joinTo = parseTable(t.stmt, table)
 	t.joinTo.table.Condition = condition
 	t.joinKind = joinKind
 	return t.joinTo
 }
 
-func (t *TableStmt) Where(condition string) *WhereStmt {
-	where := &WhereStmt{ConditionStmt: ConditionStmt{stmt: t, conditions: []string{condition}}}
+func (t *TableStmt) InnerJoin(table, condition string) *TableStmt {
+	return t.Join(`INNER`, table, condition)
+}
+
+func (t *TableStmt) LeftJoin(table, condition string) *TableStmt {
+	return t.Join(`LEFT`, table, condition)
+}
+
+func (t *TableStmt) RightJoin(table, condition string) *TableStmt {
+	return t.Join(`RIGHT`, table, condition)
+}
+
+func (t *TableStmt) Where(condition string) *Where {
+	where := &Where{Condition: Condition{stmt: t, conditions: []string{condition}}}
 	assignWhere(t.stmt, where)
 	return where
 }
 
-func (t *TableStmt) GroupBy(groupBy string) *GroupByStmt {
+func (t *TableStmt) GroupBy(groupBy string) *GroupBy {
 	split := strings.Split(groupBy, `,`)
 	groups := []string{}
 	for _, s := range split {
 		groups = append(groups, strings.TrimSpace(s))
 	}
-	g := &GroupByStmt{groups: groups}
+	g := &GroupBy{groups: groups}
 	assignGroupBy(t.stmt, g)
 	return g
 }
@@ -64,8 +57,8 @@ func (t *TableStmt) GroupBy(groupBy string) *GroupByStmt {
 //OrderBy
 //query: "title" => Select books.* From books ORDER BY title
 //query: "title DESC" => Select books.* From books ORDER BY title DESC
-func (t *TableStmt) OrderBy(orders string) *OrderByStmt {
-	o := &OrderByStmt{table: t}
+func (t *TableStmt) OrderBy(orders string) *OrderBy {
+	o := &OrderBy{table: t}
 	split := strings.Split(orders, `,`)
 	for _, order := range split {
 		o.orders = append(o.orders, strings.TrimSpace(order))

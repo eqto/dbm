@@ -4,7 +4,7 @@ import "strings"
 
 type UpdateStmt struct {
 	table     Table
-	condition *ConditionStmt
+	condition *Condition
 }
 
 func (u *UpdateStmt) Set(query string) *UpdateStmt {
@@ -15,9 +15,9 @@ func (u *UpdateStmt) Set(query string) *UpdateStmt {
 	return u
 }
 
-func (u *UpdateStmt) Where(condition string) *ConditionStmt {
+func (u *UpdateStmt) Where(condition string) *Condition {
 	if u.condition == nil {
-		u.condition = &ConditionStmt{stmt: u}
+		u.condition = &Condition{stmt: u}
 	}
 	u.condition.conditions = append(u.condition.conditions, condition)
 	return u.condition
@@ -34,6 +34,6 @@ func (u *UpdateStmt) set(query string) {
 	u.table.Fields = append(u.table.Fields, field)
 }
 
-func Update(table string) *UpdateStmt {
+func NewUpdate(table string) *UpdateStmt {
 	return &UpdateStmt{table: Table{Name: table}}
 }

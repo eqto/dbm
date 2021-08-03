@@ -1,10 +1,10 @@
 package query
 
-type OrderByStmt struct {
+type OrderBy struct {
 	table  *TableStmt
 	orders []string
 }
 
-func (o *OrderByStmt) Limit(num ...int) *TableStmt {
+func (o *OrderBy) Limit(num ...int) *TableStmt {
 	return o.table.Limit(num...)
 }

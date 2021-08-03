@@ -16,7 +16,3 @@ func (i *InsertStmt) Values(query string) *InsertStmt {
 	}
 	return i
 }
-
-func InsertInto(table string, fields string) *InsertStmt {
-	return &InsertStmt{table: Table{Name: table, Fields: parseFields(fields)}}
-}
