@@ -1,4 +1,4 @@
-package db
+package dbq
 
 //Connect ...
 func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {
