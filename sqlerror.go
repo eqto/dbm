@@ -1,4 +1,4 @@
-package db
+package dbqoo
 
 const (
 	noError = iota

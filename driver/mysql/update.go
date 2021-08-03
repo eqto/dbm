@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eqto/go-db/query"
+	"github.com/eqto/dbqoo/query"
 )
 
 func queryUpdate(stmt *query.UpdateStmt) string {

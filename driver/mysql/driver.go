@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/eqto/go-db"
-	"github.com/eqto/go-db/query"
+	db "github.com/eqto/dbqoo"
+	"github.com/eqto/dbqoo/query"
 	_ "github.com/go-sql-driver/mysql"
 )
 

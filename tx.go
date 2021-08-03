@@ -1,4 +1,4 @@
-package db
+package dbqoo
 
 import (
 	"database/sql"
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eqto/go-db/query"
+	"github.com/eqto/dbqoo/query"
 )
 
 //Tx ...
