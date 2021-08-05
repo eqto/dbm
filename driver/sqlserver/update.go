@@ -4,19 +4,28 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eqto/dbm/query"
+	"github.com/eqto/dbm/stmt"
 )
 
-func queryUpdate(stmt *query.UpdateStmt) string {
-	table := query.TableOf(stmt)
-	fieldStrs := []string{}
-	for _, field := range table.Fields {
-		fieldStrs = append(fieldStrs, field.Name+` = `+field.Placeholder)
-	}
+func updateStatement(s *stmt.Update) string {
 	sql := strings.Builder{}
-	sql.WriteString(fmt.Sprintf(`UPDATE %s SET %s`, table.Name, strings.Join(fieldStrs, `, `)))
-	if conditions := query.WhereOf(stmt); len(conditions) > 0 {
-		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(conditions, ` `)))
+	tableName := stmt.TableOf(s)
+
+	sql.WriteString(fmt.Sprintf(`UPDATE %s SET %s`, tableName, strings.Join(stmt.NameValueOf(s), `, `)))
+
+	wheres := stmt.WheresOf(s)
+	if len(wheres) > 0 {
+		sql.WriteString(` WHERE `)
+		for i, where := range wheres {
+			if i > 0 {
+				if where.Or {
+					sql.WriteString(` OR `)
+				} else {
+					sql.WriteString(` AND `)
+				}
+			}
+			sql.WriteString(where.Condition)
+		}
 	}
 
 	return sql.String()

@@ -8,7 +8,6 @@ import (
 )
 
 func insertStatement(s *stmt.Insert) string {
-
 	tableName := stmt.TableOf(s)
 	fields := stmt.FieldsOf(s)
 

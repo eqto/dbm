@@ -27,7 +27,7 @@ func (s *Select) RightJoin(table, on string) *Select {
 
 func (s *Select) Where(condition string) *SelectWhere {
 	s.wheres = []WhereParam{{condition, false}}
-	return &SelectWhere{Where{stmt: s}}
+	return &SelectWhere{s}
 }
 
 func (s *Select) GroupBy(groupBy string) *GroupBy {

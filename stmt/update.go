@@ -23,7 +23,7 @@ func (u *UpdateFields) Set(keyvalue string) *UpdateFields {
 	return u.stmt.Set(keyvalue)
 }
 
-func (u *UpdateFields) Where(condition string) *Where {
+func (u *UpdateFields) Where(condition string) *UpdateWhere {
 	u.stmt.wheres = []WhereParam{{condition, false}}
-	return &Where{stmt: u.stmt}
+	return &UpdateWhere{u.stmt}
 }

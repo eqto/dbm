@@ -1,13 +1,19 @@
 package stmt
 
-func StatementOf(stmt interface{}) interface{} {
-	switch stmt := stmt.(type) {
-	case *Where:
-		return stmt.stmt
+func StatementOf(s interface{}) interface{} {
+	switch s := s.(type) {
+	case *SelectWhere:
+		return s.stmt
+	case *GroupBy:
+		return s.stmt
+	case *OrderBy:
+		return s.stmt
+	case *UpdateWhere:
+		return s.stmt
 	case *UpdateFields:
-		return stmt.stmt
+		return s.stmt
 	}
-	return stmt
+	return s
 }
 
 func FieldsOf(stmt interface{}) Fields {

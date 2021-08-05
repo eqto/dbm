@@ -4,25 +4,25 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eqto/dbm/query"
+	"github.com/eqto/dbm/stmt"
 )
 
-func queryInsert(stmt *query.InsertStmt) string {
-	table := query.TableOf(stmt)
+func insertStatement(s *stmt.Insert) string {
+	tableName := stmt.TableOf(s)
+	fields := stmt.FieldsOf(s)
 
 	fieldStrs := []string{}
-	valueStrs := []string{}
-	values := query.ValueOf(stmt)
-
-	paramCounter := 0
-	for i, field := range table.Fields {
-		fieldStrs = append(fieldStrs, field.Name)
-		if len(values) > i && values[i] != `?` {
-			valueStrs = append(valueStrs, values[i])
+	fieldValues := []string{}
+	counter := 0
+	for i, name := range fields.Names() {
+		fieldStrs = append(fieldStrs, name)
+		if value := fields.ValueByIndex(i); value != `` {
+			fieldValues = append(fieldValues, value)
 		} else {
-			paramCounter++
-			valueStrs = append(valueStrs, fmt.Sprintf(`@p%d`, paramCounter))
+			counter++
+			fieldValues = append(fieldValues, fmt.Sprintf(`@p%d`, counter))
 		}
 	}
-	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, table.Name, strings.Join(fieldStrs, `, `), strings.Join(valueStrs, `, `))
+
+	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, tableName, strings.Join(fieldStrs, `, `), strings.Join(fieldValues, `, `))
 }

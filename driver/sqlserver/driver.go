@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/denisenkom/go-mssqldb"
 	db "github.com/eqto/dbm"
-	"github.com/eqto/dbm/query"
+	"github.com/eqto/dbm/stmt"
 )
 
 func init() {
@@ -23,15 +23,15 @@ func (Driver) Name() string {
 	return `sqlserver`
 }
 
-func (Driver) StatementString(stmt interface{}) string {
-	stmt = query.StatementOf(stmt)
-	switch stmt := stmt.(type) {
-	case *query.FieldsStmt:
-		return querySelect(stmt)
-	case *query.InsertStmt:
-		return queryInsert(stmt)
-	case *query.UpdateStmt:
-		return queryUpdate(stmt)
+func (Driver) StatementString(s interface{}) string {
+	s = stmt.StatementOf(s)
+	switch stmt := s.(type) {
+	case *stmt.Select:
+		return selectStatement(stmt)
+	case *stmt.Insert:
+		return insertStatement(stmt)
+	case *stmt.Update:
+		return updateStatement(stmt)
 	}
 	return ``
 }
@@ -99,91 +99,3 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	}
 	return vals, nil
 }
-
-// func (*driver) BuildQuery(param db.QueryParameter) string {
-// 	s := strings.Builder{}
-// 	println(param.Mode())
-// 	switch param.Mode() {
-// 	case db.ModeInsert:
-// 		values := []string{}
-// 		s.WriteString(`INSERT INTO ` + param.Table())
-// 		if len(param.Keys()) > 0 {
-// 			s.WriteString(`(` + strings.Join(param.Keys(), `, `) + `)`)
-// 			values = append(values, `?`)
-// 		}
-// 		s.WriteString(fmt.Sprintf(` VALUES(%s)`, strings.Join(values, `, `)))
-// 	case db.ModeSelect:
-// 		strFields := strings.Join(param.Fields(), `, `)
-// 		if strFields == `` {
-// 			strFields = `*`
-// 		}
-// 		s.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strFields, param.Table()))
-// 		if len(param.Wheres()) > 0 {
-// 			s.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(param.Wheres(), ` AND `)))
-// 		}
-// 		if param.Count() > 0 {
-// 			s.WriteString(fmt.Sprintf(` LIMIT %d, %d`, param.Start(), param.Count()))
-// 		}
-// 	}
-// 	return s.String()
-// }
-
-////////////////////////////////////////////////
-////////////////////////////////////////////////
-////////////////////////////////////////////////
-
-// func init() {
-// 	driver.Register(`sqlserver`, &sqlserver{})
-// }
-
-// type sqlserver struct {
-// }
-
-// func (*sqlserver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
-// 	vals := make([]interface{}, len(colTypes))
-// 	for idx, colType := range colTypes {
-// 		scanType := colType.ScanType()
-// 		switch scanType.Kind() {
-// 		case reflect.Int64:
-// 			vals[idx] = new(*int64)
-// 		case reflect.Bool:
-// 			vals[idx] = new(*bool)
-// 		case reflect.String:
-// 			vals[idx] = new(*string)
-// 		case reflect.Struct:
-// 			switch scanType.Name() {
-// 			case `Time`:
-// 				vals[idx] = new(*time.Time)
-// 			}
-// 		}
-// 		if vals[idx] == nil {
-// 			return nil, fmt.Errorf(`not supported type %s:%s as kind %s`, colType.Name(), colType.DatabaseTypeName(), scanType.Kind().String())
-// 		}
-// 	}
-// 	return vals, nil
-// }
-
-// func (d *sqlserver) ConnectionString(hostname string, port int, username, password, name string) string {
-// 	u := url.URL{
-// 		Scheme:   `sqlserver`,
-// 		User:     url.UserPassword(username, password),
-// 		Host:     fmt.Sprintf("%s:%d", hostname, port),
-// 		RawQuery: name,
-// 	}
-// 	return u.String()
-// }
-
-// func (*sqlserver) InsertQuery(tableName string, fields []string) string {
-// 	values := make([]string, len(fields))
-// 	for i := range values {
-// 		values[i] = fmt.Sprintf(`@p%d`, i+1)
-// 	}
-// 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)",
-// 		tableName,
-// 		strings.Join(fields, `, `),
-// 		strings.Join(values, `, `))
-// }
-
-// func (*sqlserver) IsDuplicate(msg string) bool {
-// 	return regexp.MustCompile(`.*Cannot insert duplicate key.*`).MatchString(msg)
-// }

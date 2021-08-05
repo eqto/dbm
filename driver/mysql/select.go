@@ -8,10 +8,6 @@ import (
 )
 
 func selectStatement(s *stmt.Select) string {
-	// sql := strings.Builder{}
-	// fields := []string{}
-	// tables := []string{}
-
 	fieldStrs := []string{}
 	tableStrs := []string{}
 
