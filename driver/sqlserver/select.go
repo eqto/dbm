@@ -7,7 +7,7 @@ import (
 	"github.com/eqto/dbq/query"
 )
 
-func querySelect(stmt *query.SelectStmt) string {
+func querySelect(stmt *query.FieldsStmt) string {
 	sql := strings.Builder{}
 
 	fields := []string{}

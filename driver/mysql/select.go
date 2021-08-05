@@ -4,59 +4,74 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eqto/dbq/query"
+	"github.com/eqto/dbq/stmt"
 )
 
-func querySelect(stmt *query.SelectStmt) string {
-	sql := strings.Builder{}
+func selectStatement(s *stmt.Select) string {
+	// sql := strings.Builder{}
+	// fields := []string{}
+	// tables := []string{}
 
-	fields := []string{}
-	tables := []string{}
+	fieldStrs := []string{}
+	tableStrs := []string{}
 
-	for _, field := range query.FieldsOf(stmt) {
-		if field.Alias != `` {
-			fields = append(fields, fmt.Sprintf(`%s AS %s`, field.Name, field.Alias))
+	fields := stmt.FieldsOf(s)
+
+	for i, name := range fields.Names() {
+		if alias := fields.AliasByIndex(i); alias != `` {
+			fieldStrs = append(fieldStrs, fmt.Sprintf(`%s AS %s`, name, alias))
 		} else {
-			fields = append(fields, field.Name)
+			fieldStrs = append(fieldStrs, name)
 		}
 	}
 
-	tableStmt := query.TableStmtOf(stmt)
-	for {
-		table := query.TableOf(tableStmt)
-		tableStr := table.Name
+	tables := stmt.TablesOf(s)
+	for i, name := range tables.Names() {
+		table := tables.TableByIndex(i)
+		tableStr := name
 		if table.Alias != `` {
 			tableStr += ` ` + table.Alias
 		}
-		if len(tables) == 0 {
-			tables = append(tables, tableStr)
-		} else {
-			tables = append(tables, fmt.Sprintf(`INNER JOIN %s ON %s`, tableStr, table.Condition))
+		if i > 0 {
+			join := `INNER`
+			switch table.Join {
+			case stmt.LeftJoin:
+				join = `LEFT`
+			case stmt.RightJoin:
+				join = `RIGHT`
+			}
+			tableStr = fmt.Sprintf(`%s JOIN %s ON %s`, join, tableStr, table.JoinOn)
 		}
+		tableStrs = append(tableStrs, tableStr)
+	}
 
-		tableStmt = query.JoinOf(tableStmt)
-		if tableStmt == nil {
-			break
+	sql := strings.Builder{}
+	sql.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strings.Join(fieldStrs, `, `), strings.Join(tableStrs, ` `)))
+
+	wheres := stmt.WheresOf(s)
+	if len(wheres) > 0 {
+		sql.WriteString(` WHERE `)
+		for i, where := range wheres {
+			if i > 0 {
+				if where.Or {
+					sql.WriteString(` OR `)
+				} else {
+					sql.WriteString(` AND `)
+				}
+			}
+			sql.WriteString(where.Condition)
 		}
 	}
-	strFields := strings.Join(fields, `, `)
-	if strFields == `` {
-		strFields = `*`
-	}
-	sql.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, strFields, strings.Join(tables, ` `)))
 
-	if wheres := query.WhereOf(stmt); len(wheres) > 0 {
-		sql.WriteString(fmt.Sprintf(` WHERE %s`, strings.Join(wheres, ` `)))
+	if groupBy := stmt.GroupByOf(s); groupBy != `` {
+		sql.WriteString(fmt.Sprintf(` GROUP BY %s`, groupBy))
 	}
-	if groupBy := query.GroupByOf(stmt); len(groupBy) > 0 {
-		sql.WriteString(fmt.Sprintf(` GROUP BY %s`, strings.Join(groupBy, ` `)))
+	if orderBy := stmt.OrderByOf(s); orderBy != `` {
+		sql.WriteString(fmt.Sprintf(` ORDER BY %s`, orderBy))
 	}
-	if orderBy := query.OrderByOf(stmt); len(orderBy) > 0 {
-		sql.WriteString(fmt.Sprintf(` ORDER BY %s`, strings.Join(orderBy, `, `)))
-	}
-
-	if offset, count := query.LimitOf(stmt); count > 0 {
+	if offset, count := stmt.LimitOf(s); count > 0 {
 		sql.WriteString(fmt.Sprintf(` LIMIT %d, %d`, offset, count))
 	}
+
 	return sql.String()
 }

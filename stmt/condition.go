@@ -1,4 +1,4 @@
-package query
+package stmt
 
 type Condition struct {
 	stmt       interface{}

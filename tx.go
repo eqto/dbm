@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strings"
 	"time"
-
-	"github.com/eqto/dbq/query"
 )
 
 //Tx ...
@@ -273,6 +271,6 @@ func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, 
 		values[idx] = value
 		idx++
 	}
-	q := query.InsertInto(tableName, strings.Join(fields, `, `))
-	return t.Exec(t.drv.Query(q), values...)
+	q := InsertInto(tableName, strings.Join(fields, `, `))
+	return t.Exec(t.drv.StatementString(q), values...)
 }

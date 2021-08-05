@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	db "github.com/eqto/dbq"
-	"github.com/eqto/dbq/query"
+	"github.com/eqto/dbq/stmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -23,15 +23,15 @@ func (Driver) Name() string {
 	return `mysql`
 }
 
-func (Driver) Query(stmt interface{}) string {
-	stmt = query.StatementOf(stmt)
-	switch stmt := stmt.(type) {
-	case *query.SelectStmt:
-		return querySelect(stmt)
-	case *query.InsertStmt:
-		return queryInsert(stmt)
-	case *query.UpdateStmt:
-		return queryUpdate(stmt)
+func (Driver) StatementString(s interface{}) string {
+	s = stmt.StatementOf(s)
+	switch stmt := s.(type) {
+	case *stmt.Select:
+		return selectStatement(stmt)
+	case *stmt.Insert:
+		return insertStatement(stmt)
+	case *stmt.Update:
+		return updateStatement(stmt)
 	}
 	return ``
 }

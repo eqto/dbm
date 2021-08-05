@@ -23,10 +23,10 @@ func (Driver) Name() string {
 	return `sqlserver`
 }
 
-func (Driver) Query(stmt interface{}) string {
+func (Driver) StatementString(stmt interface{}) string {
 	stmt = query.StatementOf(stmt)
 	switch stmt := stmt.(type) {
-	case *query.SelectStmt:
+	case *query.FieldsStmt:
 		return querySelect(stmt)
 	case *query.InsertStmt:
 		return queryInsert(stmt)
