@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eqto/dbq/query"
+	"github.com/eqto/dbm/query"
 )
 
 func querySelect(stmt *query.FieldsStmt) string {

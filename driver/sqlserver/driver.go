@@ -7,8 +7,8 @@ import (
 	"regexp"
 
 	_ "github.com/denisenkom/go-mssqldb"
-	db "github.com/eqto/dbq"
-	"github.com/eqto/dbq/query"
+	db "github.com/eqto/dbm"
+	"github.com/eqto/dbm/query"
 )
 
 func init() {

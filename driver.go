@@ -1,4 +1,4 @@
-package dbq
+package dbm
 
 import (
 	"database/sql"
@@ -25,5 +25,5 @@ func getDriver(name string) (Driver, error) {
 	if d, ok := driverMap[name]; ok {
 		return d, nil
 	}
-	return nil, fmt.Errorf(`driver '%s' not supported or not registered. Import from github.com/gdbqoob/driver`, name)
+	return nil, fmt.Errorf(`driver '%s' not supported or not registered. Import from github.com/eqto/dbm/driver/[driver_name]`, name)
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eqto/dbq/stmt"
+	"github.com/eqto/dbm/stmt"
 )
 
 func insertStatement(s *stmt.Insert) string {

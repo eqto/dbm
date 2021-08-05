@@ -1,4 +1,4 @@
-package dbq
+package dbm
 
 import (
 	"database/sql"

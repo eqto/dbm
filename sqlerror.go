@@ -1,4 +1,4 @@
-package dbq
+package dbm
 
 const (
 	noError = iota
