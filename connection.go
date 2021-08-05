@@ -34,6 +34,10 @@ func (c *Connection) Connect() error {
 	return nil
 }
 
+func (c *Connection) Driver() Driver {
+	return c.driver
+}
+
 //Ping ...
 func (c *Connection) Ping() error {
 	return c.db.Ping()
