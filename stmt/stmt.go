@@ -1,5 +1,24 @@
 package stmt
 
+import "errors"
+
+func Copy(dest, src interface{}) error {
+	src = StatementOf(src)
+	if dest, ok := dest.(*Select); ok {
+		if src, ok := src.(*Select); ok {
+			dest.fields = src.fields
+			dest.tables = src.tables
+			dest.wheres = src.wheres
+			dest.groupBy = src.groupBy
+			dest.orderBy = src.orderBy
+			dest.offset = src.offset
+			dest.count = src.count
+			return nil
+		}
+	}
+	return errors.New(`copy failed`)
+}
+
 func StatementOf(s interface{}) interface{} {
 	switch s := s.(type) {
 	case *SelectWhere:
