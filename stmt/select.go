@@ -25,8 +25,13 @@ func (s *Select) RightJoin(table, on string) *Select {
 	return s.join(RightJoin, table, on)
 }
 
-func (s *Select) Where(condition string) *SelectWhere {
-	s.wheres = []WhereParam{{condition, false}}
+func (s *Select) Where(conditions ...string) *SelectWhere {
+	if len(conditions) > 0 {
+		s.wheres = []WhereParam{}
+		for _, c := range conditions {
+			s.wheres = append(s.wheres, WhereParam{c, false})
+		}
+	}
 	return &SelectWhere{s}
 }
 
@@ -40,13 +45,22 @@ func (s *Select) OrderBy(orderBy string) *OrderBy {
 	return &OrderBy{s}
 }
 
+func (s *Select) Offset(offset int) *Select {
+	s.offset = offset
+	return s
+}
+
+func (s *Select) Count(count int) *Select {
+	s.count = count
+	return s
+}
+
 func (s *Select) Limit(num ...int) *Select {
 	switch len(num) {
 	case 2:
-		s.offset = num[0]
-		s.count = num[1]
+		s.Offset(num[0]).Count(num[1])
 	case 1:
-		s.count = num[0]
+		s.Count(num[0])
 	}
 	return s
 }
