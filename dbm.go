@@ -1,6 +1,8 @@
 package dbm
 
-import "github.com/eqto/dbm/stmt"
+import (
+	"github.com/eqto/dbm/stmt"
+)
 
 //Connect ...
 func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {

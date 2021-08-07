@@ -25,13 +25,13 @@ func (Driver) Name() string {
 
 func (Driver) StatementString(s interface{}) string {
 	s = stmt.StatementOf(s)
-	switch stmt := s.(type) {
+	switch s := s.(type) {
 	case *stmt.Select:
-		return selectStatement(stmt)
+		return selectStatement(s)
 	case *stmt.Insert:
-		return insertStatement(stmt)
+		return insertStatement(s)
 	case *stmt.Update:
-		return updateStatement(stmt)
+		return updateStatement(s)
 	}
 	return ``
 }
