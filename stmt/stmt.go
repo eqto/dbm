@@ -54,6 +54,9 @@ func TableOf(stmt interface{}) string {
 	}
 	return ``
 }
+func OutputOf(stmt *Insert) string {
+	return stmt.output
+}
 
 func NameValueOf(stmt *Update) []string {
 	return stmt.namevalue

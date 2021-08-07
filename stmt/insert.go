@@ -2,9 +2,24 @@ package stmt
 
 import "strings"
 
+type InsertValues struct {
+	insert *Insert
+}
+
+func (i *InsertValues) Values(values string) *Insert {
+	i.insert.Values(values)
+	return i.insert
+}
+
 type Insert struct {
 	table  string
 	fields Fields
+	output string //used by sqlserver
+}
+
+func (i *Insert) Output(output string) *InsertValues {
+	i.output = output
+	return &InsertValues{i}
 }
 
 func (i *Insert) Values(values string) *Insert {
