@@ -173,7 +173,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 	if e != nil {
 		return e
 	}
-	println(rs)
+
 	if rs == nil || len(rs) == 0 {
 		return newSQLError(t.drv, errNotFound)
 	}
