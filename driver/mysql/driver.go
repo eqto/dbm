@@ -6,17 +6,17 @@ import (
 	"reflect"
 	"regexp"
 
-	db "github.com/eqto/dbm"
+	"github.com/eqto/dbm"
 	"github.com/eqto/dbm/stmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func init() {
-	db.Register(`mysql`, &Driver{})
+	dbm.Register(`mysql`, &Driver{})
 }
 
 type Driver struct {
-	db.Driver
+	dbm.Driver
 }
 
 func (Driver) Name() string {

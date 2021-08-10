@@ -3,20 +3,22 @@ package sqlserver
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"reflect"
 	"regexp"
+	"time"
 
 	_ "github.com/denisenkom/go-mssqldb"
-	db "github.com/eqto/dbm"
+	"github.com/eqto/dbm"
 	"github.com/eqto/dbm/stmt"
 )
 
 func init() {
-	db.Register(`sqlserver`, &Driver{})
+	dbm.Register(`sqlserver`, &Driver{})
 }
 
 type Driver struct {
-	db.Driver
+	dbm.Driver
 }
 
 func (Driver) Name() string {
@@ -37,14 +39,16 @@ func (Driver) StatementString(s interface{}) string {
 }
 
 func (Driver) DataSourceName(hostname string, port int, username, password, name string) string {
-	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
-		username, password,
-		hostname, port,
-		name,
-	)
+	u := url.URL{
+		Scheme:   `sqlserver`,
+		User:     url.UserPassword(username, password),
+		Host:     fmt.Sprintf("%s:%d", hostname, port),
+		RawQuery: name,
+	}
+	return u.String()
 }
 func (Driver) IsDuplicate(msg string) bool {
-	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
+	return regexp.MustCompile(`.*Cannot insert duplicate key.*`).MatchString(msg)
 }
 
 func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
@@ -52,45 +56,16 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	for idx, colType := range colTypes {
 		scanType := colType.ScanType()
 		switch scanType.Kind() {
-		case reflect.Int8:
-			vals[idx] = new(int8)
-		case reflect.Uint8:
-			vals[idx] = new(uint8)
-		case reflect.Int16:
-			vals[idx] = new(int16)
-		case reflect.Uint16:
-			vals[idx] = new(uint16)
-		case reflect.Int32:
-			vals[idx] = new(int32)
-		case reflect.Uint32:
-			vals[idx] = new(uint32)
 		case reflect.Int64:
-			vals[idx] = new(int64)
-		case reflect.Uint64:
-			vals[idx] = new(uint64)
-		case reflect.Float32:
-			vals[idx] = new(float32)
-		case reflect.Float64:
-			vals[idx] = new(float64)
-		case reflect.Slice:
-			switch colType.DatabaseTypeName() {
-			case `DECIMAL`:
-				if null, ok := colType.Nullable(); null || ok {
-					vals[idx] = new(sql.NullFloat64)
-				} else {
-					vals[idx] = new(float64)
-				}
-			default:
-				vals[idx] = new([]byte)
-			}
+			vals[idx] = new(*int64)
+		case reflect.Bool:
+			vals[idx] = new(*bool)
+		case reflect.String:
+			vals[idx] = new(*string)
 		case reflect.Struct:
 			switch scanType.Name() {
-			case `NullInt64`:
-				vals[idx] = new(sql.NullInt64)
-			case `NullFloat64`:
-				vals[idx] = new(sql.NullFloat64)
-			case `NullTime`:
-				vals[idx] = new(sql.NullTime)
+			case `Time`:
+				vals[idx] = new(*time.Time)
 			}
 		}
 		if vals[idx] == nil {
