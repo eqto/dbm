@@ -5,7 +5,6 @@ import (
 	"errors"
 	"reflect"
 	"strings"
-	"time"
 )
 
 //Tx ...
@@ -71,75 +70,12 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 
 //Select ...
 func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
-	rows, e := t.sqlTx.Query(query, params...)
-	if e != nil {
-		return nil, wrapErr(t.drv, e)
-	}
-	defer rows.Close()
-
-	cols, e := rows.Columns()
-	if e != nil {
-		return nil, wrapErr(t.drv, e)
-	}
-	colTypes, e := rows.ColumnTypes()
-	if e != nil {
-		return nil, wrapErr(t.drv, e)
-	}
-
-	var results []Resultset
-
-	for rows.Next() {
-		contents, e := t.drv.BuildContents(colTypes)
-		if e != nil {
-			return nil, wrapErr(t.drv, e)
-		}
-		if e = rows.Scan(contents...); e != nil {
-			rows.Close()
-			return nil, wrapErr(t.drv, e)
-		}
-
-		rs := Resultset{}
-		for key, val := range cols {
-			rs[val] = contents[key]
-		}
-		results = append(results, rs)
-	}
-	rows.Close()
-
-	return results, nil
+	return execQuery(t.drv, t.sqlTx.Query, query, params...)
 }
 
 //SelectStruct ...
 func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{}) error {
-	typeOf := reflect.TypeOf(dest)
-
-	if typeOf.Kind() != reflect.Ptr {
-		return errors.New(`dest is not a pointer`)
-	}
-	typeOf = typeOf.Elem()
-	if typeOf.Kind() != reflect.Slice {
-		return errors.New(`dest is not a slice`)
-	}
-
-	rs, e := t.Select(query, params...)
-	if e != nil {
-		return e
-	}
-
-	if len(rs) == 0 {
-		return nil
-	}
-	elType := typeOf.Elem()
-	fieldMap := t.createFieldMap(elType)
-
-	slice := reflect.MakeSlice(typeOf, 0, len(rs))
-	for _, val := range rs {
-		el := reflect.New(elType)
-		t.assignStruct(el.Interface(), fieldMap, val, elType)
-		slice = reflect.Append(slice, el.Elem())
-	}
-	reflect.ValueOf(dest).Elem().Set(slice)
-	return nil
+	return execQueryStruct(t.Select, dest, query, params...)
 }
 
 //Get ...
@@ -179,67 +115,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 	}
 
 	typeOf = typeOf.Elem()
-	return t.assignStruct(dest, t.createFieldMap(typeOf), rs, typeOf)
-}
-
-func (t *Tx) createFieldMap(el reflect.Type) map[string]string {
-	//[dbtag]fieldname
-	fieldMap := make(map[string]string)
-	numField := el.NumField()
-
-	for i := 0; i < numField; i++ {
-		field := el.Field(i)
-		dbTag := field.Tag.Get(`db`)
-		if dbTag != `` {
-			fieldMap[dbTag] = field.Name
-		}
-	}
-	return fieldMap
-}
-
-func (t *Tx) assignStruct(dest interface{}, fieldMap map[string]string, rs Resultset, typeOf reflect.Type) error {
-	valOf := reflect.ValueOf(dest)
-	for key, val := range fieldMap {
-		field, _ := typeOf.FieldByName(val)
-		valField := valOf.Elem().FieldByName(val)
-
-		var val interface{}
-		kind := field.Type.Kind()
-
-		if kind == reflect.Ptr {
-			kind = field.Type.Elem().Kind()
-			switch kind {
-			case reflect.String:
-				val = rs.StringNil(key)
-			case reflect.Int:
-				val = rs.IntNil(key)
-			case reflect.Float64:
-				val = rs.FloatNil(key)
-			case reflect.TypeOf(time.Time{}).Kind():
-				val = rs.TimeNil(key)
-			default:
-				println(`unsupported type: ` + key + `:` + kind.String())
-				return errors.New(`unsupported type: ` + key + `:` + kind.String())
-			}
-		} else {
-			switch kind {
-			case reflect.String:
-				val = rs.String(key)
-			case reflect.Int:
-				val = rs.Int(key)
-			case reflect.Float64:
-				val = rs.Float(key)
-			case reflect.TypeOf(time.Time{}).Kind():
-				val = rs.Time(key)
-			default:
-				println(`unsupported type: ` + key + `:` + kind.String())
-				return errors.New(`unsupported type: ` + key + `:` + kind.String())
-			}
-		}
-		val = reflect.ValueOf(val)
-		valField.Set(val.(reflect.Value))
-	}
-	return nil
+	return assignStruct(dest, createFieldMap(typeOf), rs, typeOf)
 }
 
 //Exec ...

@@ -2,7 +2,9 @@ package dbm
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -87,23 +89,19 @@ func (c *Connection) MustExec(query string, params ...interface{}) *Result {
 
 //Exec ...
 func (c *Connection) Exec(query string, params ...interface{}) (*Result, error) {
-	tx, e := c.Begin()
-	if e != nil {
-		return nil, e
-	}
-	defer tx.Recover()
-	return tx.Exec(query, params...)
+	res, e := c.db.Exec(query, params...)
+	return &Result{result: res}, e
 }
 
 //Get ...
 func (c *Connection) Get(query string, params ...interface{}) (Resultset, error) {
-	tx, e := c.Begin()
+	rs, e := c.Select(query, params...)
 	if e != nil {
 		return nil, e
+	} else if rs == nil {
+		return nil, nil
 	}
-	defer tx.Recover()
-
-	return tx.Get(query, params...)
+	return rs[0], nil
 }
 
 //MustGet ...
@@ -117,13 +115,22 @@ func (c *Connection) MustGet(query string, params ...interface{}) Resultset {
 
 //GetStruct ...
 func (c *Connection) GetStruct(dest interface{}, query string, params ...interface{}) error {
-	tx, e := c.Begin()
+	typeOf := reflect.TypeOf(dest)
+	if typeOf.Kind() != reflect.Ptr {
+		return errors.New(`dest is not a pointer`)
+	}
+
+	rs, e := c.Get(query, params...)
 	if e != nil {
 		return e
 	}
-	defer tx.Recover()
 
-	return tx.GetStruct(dest, query, params...)
+	if rs == nil || len(rs) == 0 {
+		return newSQLError(c.driver, errNotFound)
+	}
+
+	typeOf = typeOf.Elem()
+	return assignStruct(dest, createFieldMap(typeOf), rs, typeOf)
 }
 
 //MustSelect ...
@@ -137,22 +144,12 @@ func (c *Connection) MustSelect(query string, params ...interface{}) []Resultset
 
 //Select ...
 func (c *Connection) Select(query string, params ...interface{}) ([]Resultset, error) {
-	tx, e := c.Begin()
-	if e != nil {
-		return nil, e
-	}
-	defer tx.Recover()
-	return tx.Select(query, params...)
+	return execQuery(c.driver, c.db.Query, query, params...)
 }
 
 //SelectStruct ...
 func (c *Connection) SelectStruct(dest interface{}, query string, params ...interface{}) error {
-	tx, e := c.Begin()
-	if e != nil {
-		return e
-	}
-	defer tx.Recover()
-	return tx.SelectStruct(dest, query, params...)
+	return execQueryStruct(c.Select, dest, query, params...)
 }
 
 //MustInsert ...
@@ -166,12 +163,17 @@ func (c *Connection) MustInsert(tableName string, dataMap map[string]interface{}
 
 //Insert ...
 func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
-	tx, e := c.Begin()
-	if e != nil {
-		return nil, e
+	length := len(dataMap)
+	fields := make([]string, length)
+	values := make([]interface{}, length)
+	idx := 0
+	for name, value := range dataMap {
+		fields[idx] = name
+		values[idx] = value
+		idx++
 	}
-	defer tx.Recover()
-	return tx.Insert(tableName, dataMap)
+	q := InsertInto(tableName, strings.Join(fields, `, `))
+	return c.Exec(c.driver.StatementString(q), values...)
 }
 
 //EnumValues return enum values, parameter field using dot notation. Ex: profile.gender , returning ['male', 'female']
