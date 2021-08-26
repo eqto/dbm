@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"time"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	mssql "github.com/denisenkom/go-mssqldb"
 	"github.com/eqto/dbm"
 	"github.com/eqto/dbm/stmt"
 )
@@ -23,6 +23,16 @@ type Driver struct {
 
 func (Driver) Name() string {
 	return `sqlserver`
+}
+
+func (Driver) SanitizeParams(values []interface{}) []interface{} {
+	for idx := range values {
+		switch value := values[idx].(type) {
+		case string:
+			values[idx] = mssql.VarChar(value)
+		}
+	}
+	return values
 }
 
 func (Driver) StatementString(s interface{}) string {

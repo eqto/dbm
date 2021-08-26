@@ -9,7 +9,7 @@ import (
 
 //Tx ...
 type Tx struct {
-	drv    Driver
+	driver Driver
 	sqlTx  *sql.Tx
 	finish bool
 }
@@ -60,8 +60,8 @@ func (t *Tx) MustInsert(tableName string, dataMap map[string]interface{}) *Resul
 }
 
 //MustSelect ...
-func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
-	if rs, e := t.Select(query, params...); e != nil {
+func (t *Tx) MustSelect(query string, args ...interface{}) []Resultset {
+	if rs, e := t.Select(query, args...); e != nil {
 		panic(e)
 	} else {
 		return rs
@@ -69,18 +69,18 @@ func (t *Tx) MustSelect(query string, params ...interface{}) []Resultset {
 }
 
 //Select ...
-func (t *Tx) Select(query string, params ...interface{}) ([]Resultset, error) {
-	return execQuery(t.drv, t.sqlTx.Query, query, params...)
+func (t *Tx) Select(query string, args ...interface{}) ([]Resultset, error) {
+	return execQuery(t.driver, t.sqlTx.Query, query, args...)
 }
 
 //SelectStruct ...
-func (t *Tx) SelectStruct(dest interface{}, query string, params ...interface{}) error {
-	return execQueryStruct(t.Select, dest, query, params...)
+func (t *Tx) SelectStruct(dest interface{}, query string, args ...interface{}) error {
+	return execQueryStruct(t.driver, t.Select, dest, query, args...)
 }
 
 //Get ...
-func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
-	rs, e := t.Select(query, params...)
+func (t *Tx) Get(query string, args ...interface{}) (Resultset, error) {
+	rs, e := t.Select(query, args...)
 	if e != nil {
 		return nil, e
 	} else if rs == nil {
@@ -90,8 +90,8 @@ func (t *Tx) Get(query string, params ...interface{}) (Resultset, error) {
 }
 
 //MustGet ...
-func (t *Tx) MustGet(query string, params ...interface{}) Resultset {
-	rs, e := t.Get(query, params...)
+func (t *Tx) MustGet(query string, args ...interface{}) Resultset {
+	rs, e := t.Get(query, args...)
 	if e != nil {
 		panic(e)
 	}
@@ -99,19 +99,19 @@ func (t *Tx) MustGet(query string, params ...interface{}) Resultset {
 }
 
 //GetStruct ...
-func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) error {
+func (t *Tx) GetStruct(dest interface{}, query string, args ...interface{}) error {
 	typeOf := reflect.TypeOf(dest)
 	if typeOf.Kind() != reflect.Ptr {
 		return errors.New(`dest is not a pointer`)
 	}
 
-	rs, e := t.Get(query, params...)
+	rs, e := t.Get(query, args...)
 	if e != nil {
 		return e
 	}
 
 	if rs == nil || len(rs) == 0 {
-		return newSQLError(t.drv, errNotFound)
+		return newSQLError(t.driver, errNotFound)
 	}
 
 	typeOf = typeOf.Elem()
@@ -119,17 +119,13 @@ func (t *Tx) GetStruct(dest interface{}, query string, params ...interface{}) er
 }
 
 //Exec ...
-func (t *Tx) Exec(query string, params ...interface{}) (*Result, error) {
-	res, e := t.sqlTx.Exec(query, params...)
-	if e != nil {
-		return nil, wrapErr(t.drv, e)
-	}
-	return &Result{result: res}, nil
+func (t *Tx) Exec(query string, args ...interface{}) (*Result, error) {
+	return exec(t.driver, t.sqlTx.Exec, query, args...)
 }
 
 //MustExec ...
-func (t *Tx) MustExec(query string, params ...interface{}) *Result {
-	result, e := t.Exec(query, params...)
+func (t *Tx) MustExec(query string, args ...interface{}) *Result {
+	result, e := t.Exec(query, args...)
 	if e != nil {
 		panic(e)
 	}
@@ -148,5 +144,5 @@ func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, 
 		idx++
 	}
 	q := InsertInto(tableName, strings.Join(fields, `, `))
-	return t.Exec(t.drv.StatementString(q), values...)
+	return t.Exec(t.driver.StatementString(q), values...)
 }

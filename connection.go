@@ -66,7 +66,7 @@ func (c *Connection) Begin() (*Tx, error) {
 	if e != nil {
 		return nil, e
 	}
-	return &Tx{drv: c.driver, sqlTx: sqlTx}, nil
+	return &Tx{driver: c.driver, sqlTx: sqlTx}, nil
 }
 
 //MustBegin ...
@@ -79,8 +79,8 @@ func (c *Connection) MustBegin() *Tx {
 }
 
 //MustExec ...
-func (c *Connection) MustExec(query string, params ...interface{}) *Result {
-	result, e := c.Exec(query, params...)
+func (c *Connection) MustExec(query string, args ...interface{}) *Result {
+	result, e := c.Exec(query, args...)
 	if e != nil {
 		panic(e)
 	}
@@ -88,14 +88,13 @@ func (c *Connection) MustExec(query string, params ...interface{}) *Result {
 }
 
 //Exec ...
-func (c *Connection) Exec(query string, params ...interface{}) (*Result, error) {
-	res, e := c.db.Exec(query, params...)
-	return &Result{result: res}, e
+func (c *Connection) Exec(query string, args ...interface{}) (*Result, error) {
+	return exec(c.driver, c.db.Exec, query, args...)
 }
 
 //Get ...
-func (c *Connection) Get(query string, params ...interface{}) (Resultset, error) {
-	rs, e := c.Select(query, params...)
+func (c *Connection) Get(query string, args ...interface{}) (Resultset, error) {
+	rs, e := c.Select(query, args...)
 	if e != nil {
 		return nil, e
 	} else if rs == nil {
@@ -105,8 +104,8 @@ func (c *Connection) Get(query string, params ...interface{}) (Resultset, error)
 }
 
 //MustGet ...
-func (c *Connection) MustGet(query string, params ...interface{}) Resultset {
-	rs, e := c.Get(query, params...)
+func (c *Connection) MustGet(query string, args ...interface{}) Resultset {
+	rs, e := c.Get(query, args...)
 	if e != nil {
 		panic(e)
 	}
@@ -114,13 +113,13 @@ func (c *Connection) MustGet(query string, params ...interface{}) Resultset {
 }
 
 //GetStruct ...
-func (c *Connection) GetStruct(dest interface{}, query string, params ...interface{}) error {
+func (c *Connection) GetStruct(dest interface{}, query string, args ...interface{}) error {
 	typeOf := reflect.TypeOf(dest)
 	if typeOf.Kind() != reflect.Ptr {
 		return errors.New(`dest is not a pointer`)
 	}
 
-	rs, e := c.Get(query, params...)
+	rs, e := c.Get(query, args...)
 	if e != nil {
 		return e
 	}
@@ -134,8 +133,8 @@ func (c *Connection) GetStruct(dest interface{}, query string, params ...interfa
 }
 
 //MustSelect ...
-func (c *Connection) MustSelect(query string, params ...interface{}) []Resultset {
-	rs, e := c.Select(query, params...)
+func (c *Connection) MustSelect(query string, args ...interface{}) []Resultset {
+	rs, e := c.Select(query, args...)
 	if e != nil {
 		panic(e)
 	}
@@ -143,13 +142,13 @@ func (c *Connection) MustSelect(query string, params ...interface{}) []Resultset
 }
 
 //Select ...
-func (c *Connection) Select(query string, params ...interface{}) ([]Resultset, error) {
-	return execQuery(c.driver, c.db.Query, query, params...)
+func (c *Connection) Select(query string, args ...interface{}) ([]Resultset, error) {
+	return execQuery(c.driver, c.db.Query, query, args...)
 }
 
 //SelectStruct ...
-func (c *Connection) SelectStruct(dest interface{}, query string, params ...interface{}) error {
-	return execQueryStruct(c.Select, dest, query, params...)
+func (c *Connection) SelectStruct(dest interface{}, query string, args ...interface{}) error {
+	return execQueryStruct(c.driver, c.Select, dest, query, args...)
 }
 
 //MustInsert ...

@@ -15,6 +15,7 @@ type Driver interface {
 	StatementString(stmt interface{}) string
 	IsDuplicate(string) bool
 	BuildContents([]*sql.ColumnType) ([]interface{}, error)
+	SanitizeParams([]interface{}) []interface{}
 }
 
 func Register(name string, driver Driver) {

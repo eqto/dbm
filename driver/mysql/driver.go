@@ -23,6 +23,10 @@ func (Driver) Name() string {
 	return `mysql`
 }
 
+func (Driver) SanitizeParams(values []interface{}) []interface{} {
+	return values
+}
+
 func (Driver) StatementString(s interface{}) string {
 	s = stmt.StatementOf(s)
 	switch s := s.(type) {

@@ -9,6 +9,10 @@ import (
 	"github.com/eqto/dbm/stmt"
 )
 
+type queryFunc func(string, ...interface{}) (*sql.Rows, error)
+type selectFunc func(string, ...interface{}) ([]Resultset, error)
+type execFunc func(string, ...interface{}) (sql.Result, error)
+
 //Connect ...
 func Connect(driver, host string, port int, username, password, name string) (*Connection, error) {
 	cn, e := newConnection(driver, host, port, username, password, name)
@@ -93,11 +97,8 @@ func assignStruct(dest interface{}, fieldMap map[string]string, rs Resultset, ty
 	return nil
 }
 
-type queryFunc func(string, ...interface{}) (*sql.Rows, error)
-type selectFunc func(string, ...interface{}) ([]Resultset, error)
-
-func execQuery(driver Driver, fn queryFunc, query string, params ...interface{}) ([]Resultset, error) {
-	rows, e := fn(query, params...)
+func execQuery(driver Driver, fn queryFunc, query string, args ...interface{}) ([]Resultset, error) {
+	rows, e := fn(query, driver.SanitizeParams(args)...)
 	if e != nil {
 		return nil, wrapErr(driver, e)
 	}
@@ -135,7 +136,7 @@ func execQuery(driver Driver, fn queryFunc, query string, params ...interface{})
 	return results, nil
 }
 
-func execQueryStruct(fn selectFunc, dest interface{}, query string, params ...interface{}) error {
+func execQueryStruct(driver Driver, fn selectFunc, dest interface{}, query string, args ...interface{}) error {
 	typeOf := reflect.TypeOf(dest)
 
 	if typeOf.Kind() != reflect.Ptr {
@@ -146,7 +147,7 @@ func execQueryStruct(fn selectFunc, dest interface{}, query string, params ...in
 		return errors.New(`dest is not a slice`)
 	}
 
-	rs, e := fn(query, params...)
+	rs, e := fn(query, driver.SanitizeParams(args)...)
 	if e != nil {
 		return e
 	}
@@ -165,4 +166,9 @@ func execQueryStruct(fn selectFunc, dest interface{}, query string, params ...in
 	}
 	reflect.ValueOf(dest).Elem().Set(slice)
 	return nil
+}
+
+func exec(driver Driver, fn execFunc, query string, args ...interface{}) (*Result, error) {
+	res, e := fn(query, driver.SanitizeParams(args)...)
+	return &Result{result: res}, e
 }
