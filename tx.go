@@ -136,13 +136,20 @@ func (t *Tx) MustExec(query string, args ...interface{}) *Result {
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
 	length := len(dataMap)
 	fields := make([]string, length)
-	values := make([]interface{}, length)
+	values := []interface{}{}
+	placeholders := []string{}
 	idx := 0
 	for name, value := range dataMap {
 		fields[idx] = name
-		values[idx] = value
+		if val, ok := value.(SQLStatement); ok {
+			placeholders = append(placeholders, val.statement)
+		} else {
+			placeholders = append(placeholders, `?`)
+
+			values = append(values, value)
+		}
 		idx++
 	}
-	q := InsertInto(tableName, strings.Join(fields, `, `))
+	q := InsertInto(tableName, strings.Join(fields, `, `)).Values(strings.Join(placeholders, `, `))
 	return t.Exec(t.driver.StatementString(q), values...)
 }
