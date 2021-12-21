@@ -141,6 +141,14 @@ func (c *Connection) MustSelect(query string, args ...interface{}) []Resultset {
 	return rs
 }
 
+func (c *Connection) Query(query string, args ...interface{}) (*Rows, error) {
+	rows, e := c.db.Query(query, args...)
+	if e != nil {
+		return nil, e
+	}
+	return newRows(c.driver, rows)
+}
+
 //Select ...
 func (c *Connection) Select(query string, args ...interface{}) ([]Resultset, error) {
 	return execQuery(c.driver, c.db.Query, query, args...)
