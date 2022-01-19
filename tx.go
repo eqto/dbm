@@ -34,6 +34,9 @@ func (t *Tx) Recover() {
 
 //Commit ...
 func (t *Tx) Commit() error {
+	if t == nil {
+		return errors.New(`Connection already closed`)
+	}
 	if t.finish {
 		return nil
 	}
@@ -43,6 +46,9 @@ func (t *Tx) Commit() error {
 
 //Rollback ...
 func (t *Tx) Rollback() error {
+	if t == nil {
+		return errors.New(`Connection already closed`)
+	}
 	if t.finish {
 		return nil
 	}
