@@ -88,7 +88,7 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 				} else {
 					vals[idx] = new(float64)
 				}
-			case `VARCHAR`:
+			case `CHAR`, `VARCHAR`, `TEXT`:
 				if nullable {
 					vals[idx] = new(sql.NullString)
 				} else {
