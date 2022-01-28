@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"time"
 
 	"github.com/eqto/dbm"
 	"github.com/eqto/dbm/stmt"
@@ -83,31 +84,30 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 			}
 			switch colType.DatabaseTypeName() {
 			case `DECIMAL`:
-				if nullable {
-					vals[idx] = new(sql.NullFloat64)
-				} else {
-					vals[idx] = new(float64)
-				}
-			case `CHAR`, `VARCHAR`, `TEXT`:
-				if nullable {
-					vals[idx] = new(sql.NullString)
-				} else {
-					vals[idx] = new(string)
-				}
+				vals[idx] = new(float64)
+			case `CHAR`, `VARCHAR`:
+				vals[idx] = new(string)
 			default:
 				println(`Not supporting `, colType.DatabaseTypeName(), ` yet.`)
 				vals[idx] = new([]byte)
 			}
+			if nullable {
+				vals[idx] = &vals[idx]
+			}
 		case reflect.Struct:
+			var val interface{}
 			switch scanType.Name() {
 			case `NullInt64`:
-				vals[idx] = new(sql.NullInt64)
+				val = new(int)
 			case `NullFloat64`:
-				vals[idx] = new(sql.NullFloat64)
+				val = new(float64)
 			case `NullTime`:
-				vals[idx] = new(sql.NullTime)
+				val = new(time.Time)
 			default:
 				println(`Not supporting struct `, scanType.Name(), ` yet.`)
+			}
+			if val != nil {
+				vals[idx] = &val
 			}
 		}
 		if vals[idx] == nil {
