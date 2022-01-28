@@ -56,27 +56,28 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 	vals := make([]interface{}, len(colTypes))
 	for idx, colType := range colTypes {
 		scanType := colType.ScanType()
+		var val interface{}
 		switch scanType.Kind() {
 		case reflect.Int8:
-			vals[idx] = new(int8)
+			val = new(int8)
 		case reflect.Uint8:
-			vals[idx] = new(uint8)
+			val = new(uint8)
 		case reflect.Int16:
-			vals[idx] = new(int16)
+			val = new(int16)
 		case reflect.Uint16:
-			vals[idx] = new(uint16)
+			val = new(uint16)
 		case reflect.Int32:
-			vals[idx] = new(int32)
+			val = new(int32)
 		case reflect.Uint32:
-			vals[idx] = new(uint32)
+			val = new(uint32)
 		case reflect.Int64:
-			vals[idx] = new(int64)
+			val = new(int64)
 		case reflect.Uint64:
-			vals[idx] = new(uint64)
+			val = new(uint64)
 		case reflect.Float32:
-			vals[idx] = new(float32)
+			val = new(float32)
 		case reflect.Float64:
-			vals[idx] = new(float64)
+			val = new(float64)
 		case reflect.Slice:
 			nullable, ok := colType.Nullable()
 			if !ok {
@@ -84,34 +85,48 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 			}
 			switch colType.DatabaseTypeName() {
 			case `DECIMAL`:
-				vals[idx] = new(float64)
-			case `CHAR`, `VARCHAR`:
-				vals[idx] = new(string)
+				f := new(float64)
+				if nullable {
+					val = &f
+				} else {
+					val = f
+				}
+			case `CHAR`, `VARCHAR`, `TEXT`:
+				s := new(string)
+				if nullable {
+					val = &s
+				} else {
+					val = s
+				}
 			default:
 				println(`Not supporting `, colType.DatabaseTypeName(), ` yet.`)
-				vals[idx] = new([]byte)
-			}
-			if nullable {
-				vals[idx] = &vals[idx]
+				b := new([]byte)
+				if nullable {
+					val = &b
+				} else {
+					val = b
+				}
+
 			}
 		case reflect.Struct:
-			var val interface{}
 			switch scanType.Name() {
 			case `NullInt64`:
-				val = new(int)
+				i := new(int)
+				val = &i
 			case `NullFloat64`:
-				val = new(float64)
+				f := new(float64)
+				val = &f
 			case `NullTime`:
-				val = new(time.Time)
+				t := new(time.Time)
+				val = &t
 			default:
 				println(`Not supporting struct `, scanType.Name(), ` yet.`)
 			}
-			if val != nil {
-				vals[idx] = &val
-			}
 		}
-		if vals[idx] == nil {
+		if val == nil {
 			return nil, fmt.Errorf(`not supported type %s:%s as kind %s`, colType.Name(), colType.DatabaseTypeName(), scanType.Kind().String())
+		} else {
+			vals[idx] = val
 		}
 	}
 	return vals, nil
