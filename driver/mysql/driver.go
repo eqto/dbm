@@ -77,14 +77,25 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 		case reflect.Float64:
 			vals[idx] = new(float64)
 		case reflect.Slice:
+			nullable, ok := colType.Nullable()
+			if !ok {
+				nullable = true
+			}
 			switch colType.DatabaseTypeName() {
 			case `DECIMAL`:
-				if null, ok := colType.Nullable(); null || ok {
+				if nullable {
 					vals[idx] = new(sql.NullFloat64)
 				} else {
 					vals[idx] = new(float64)
 				}
+			case `VARCHAR`:
+				if nullable {
+					vals[idx] = new(sql.NullString)
+				} else {
+					vals[idx] = new(string)
+				}
 			default:
+				println(`Not supporting `, colType.DatabaseTypeName(), ` yet.`)
 				vals[idx] = new([]byte)
 			}
 		case reflect.Struct:
@@ -95,6 +106,8 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 				vals[idx] = new(sql.NullFloat64)
 			case `NullTime`:
 				vals[idx] = new(sql.NullTime)
+			default:
+				println(`Not supporting struct `, scanType.Name(), ` yet.`)
 			}
 		}
 		if vals[idx] == nil {
