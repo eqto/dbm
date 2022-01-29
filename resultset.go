@@ -59,6 +59,8 @@ func (r Resultset) IntNil(name string) *int {
 			in = int(val)
 		case float64:
 			in = int(val)
+		case int:
+			in = int(val)
 		case string:
 			var e error
 			in, e = strconv.Atoi(val)
