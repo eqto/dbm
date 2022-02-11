@@ -91,7 +91,7 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 				} else {
 					val = f
 				}
-			case `CHAR`, `VARCHAR`, `TEXT`:
+			case `CHAR`, `VARCHAR`, `TEXT`, `JSON`:
 				s := new(string)
 				if nullable {
 					val = &s
