@@ -57,8 +57,8 @@ func (Driver) DataSourceName(hostname string, port int, username, password, name
 	}
 	return u.String()
 }
-func (Driver) IsDuplicate(msg string) bool {
-	return regexp.MustCompile(`.*Cannot insert duplicate key.*`).MatchString(msg)
+func (Driver) IsDuplicate(e error) bool {
+	return regexp.MustCompile(`.*Cannot insert duplicate key.*`).MatchString(e.Error())
 }
 
 func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
