@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"regexp"
 	"time"
 
 	"github.com/eqto/dbm"
 	"github.com/eqto/dbm/stmt"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -48,8 +48,11 @@ func (Driver) DataSourceName(hostname string, port int, username, password, name
 		name,
 	)
 }
-func (Driver) IsDuplicate(msg string) bool {
-	return regexp.MustCompile(`^Duplicate entry.*`).MatchString(msg)
+func (Driver) IsDuplicate(e error) bool {
+	if e, ok := e.(*mysql.MySQLError); ok {
+		return e.Number == 1062
+	}
+	return false
 }
 
 func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
