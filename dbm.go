@@ -170,5 +170,8 @@ func execQueryStruct(driver Driver, fn selectFunc, dest interface{}, query strin
 
 func exec(driver Driver, fn execFunc, query string, args ...interface{}) (*Result, error) {
 	res, e := fn(query, driver.SanitizeParams(args)...)
+	if e != nil {
+		e = wrapErr(driver, e)
+	}
 	return &Result{result: res}, e
 }

@@ -122,10 +122,8 @@ func (c *Connection) GetStruct(dest interface{}, query string, args ...interface
 	rs, e := c.Get(query, args...)
 	if e != nil {
 		return e
-	}
-
-	if rs == nil || len(rs) == 0 {
-		return newSQLError(c.driver, errNotFound)
+	} else if rs == nil {
+		return e
 	}
 
 	typeOf = typeOf.Elem()

@@ -13,7 +13,7 @@ type Driver interface {
 	Name() string
 	DataSourceName(string, int, string, string, string) string
 	StatementString(stmt interface{}) string
-	IsDuplicate(string) bool
+	IsDuplicate(e error) bool
 	BuildContents([]*sql.ColumnType) ([]interface{}, error)
 	SanitizeParams([]interface{}) []interface{}
 }

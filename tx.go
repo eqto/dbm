@@ -114,10 +114,8 @@ func (t *Tx) GetStruct(dest interface{}, query string, args ...interface{}) erro
 	rs, e := t.Get(query, args...)
 	if e != nil {
 		return e
-	}
-
-	if rs == nil || len(rs) == 0 {
-		return newSQLError(t.driver, errNotFound)
+	} else if rs == nil {
+		return e
 	}
 
 	typeOf = typeOf.Elem()
