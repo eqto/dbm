@@ -53,7 +53,7 @@ func (Driver) DataSourceName(hostname string, port int, username, password, name
 		Scheme:   `sqlserver`,
 		User:     url.UserPassword(username, password),
 		Host:     fmt.Sprintf("%s:%d", hostname, port),
-		RawQuery: fmt.Sprintf(`database=%s;app name=dbm`, name),
+		RawQuery: fmt.Sprintf(`database=%s&app+name=dbm&TrustServerCertificate=true`, name),
 	}
 	return u.String()
 }
