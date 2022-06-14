@@ -115,7 +115,7 @@ func (t *Tx) GetStruct(dest interface{}, query string, args ...interface{}) erro
 	if e != nil {
 		return e
 	} else if rs == nil {
-		return e
+		return errors.New(errRecordNotFound)
 	}
 
 	typeOf = typeOf.Elem()

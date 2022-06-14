@@ -153,7 +153,7 @@ func execQueryStruct(driver Driver, fn selectFunc, dest interface{}, query strin
 	}
 
 	if len(rs) == 0 {
-		return nil
+		return errors.New(errRecordNotFound)
 	}
 	elType := typeOf.Elem()
 	fieldMap := createFieldMap(elType)

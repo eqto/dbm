@@ -1,5 +1,9 @@
 package dbm
 
+const (
+	errRecordNotFound = `record not found`
+)
+
 type sqlError struct {
 	drv Driver
 	e   error
@@ -14,6 +18,10 @@ func IsErrDuplicate(e error) bool {
 		return e.drv.IsDuplicate(e.e)
 	}
 	return false
+}
+
+func IsErrNotFound(e error) bool {
+	return e.Error() == errRecordNotFound
 }
 
 func wrapErr(drv Driver, e error) *sqlError {
