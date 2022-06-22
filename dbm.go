@@ -14,7 +14,7 @@ type queryFunc func(string, ...interface{}) (*sql.Rows, error)
 type selectFunc func(string, ...interface{}) ([]Resultset, error)
 type execFunc func(string, ...interface{}) (sql.Result, error)
 
-func Connect(driver string, cfg Config) (*Connection, error) {
+func Connect(cfg Config) (*Connection, error) {
 	if cfg.Hostname == `` {
 		cfg.Hostname = `localhost`
 	}
