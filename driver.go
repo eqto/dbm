@@ -11,7 +11,7 @@ var (
 
 type Driver interface {
 	Name() string
-	DataSourceName(string, int, string, string, string) string
+	DataSourceName(Config) string
 	StatementString(stmt interface{}) string
 	IsDuplicate(e error) bool
 	BuildContents([]*sql.ColumnType) ([]interface{}, error)

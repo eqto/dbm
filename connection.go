@@ -3,7 +3,6 @@ package dbm
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -14,20 +13,17 @@ import (
 type Connection struct {
 	db *sql.DB
 
-	hostname string
-	port     int
-	username string
-	password string
-	name     string
-	driver   Driver
+	cfg Config
+	drv Driver
 }
 
 //Connect ...
 func (c *Connection) Connect() error {
-	db, e := sql.Open(c.driver.Name(), c.driver.DataSourceName(c.hostname, c.port, c.username, c.password, c.name))
+	db, e := sql.Open(c.cfg.DriverName, c.drv.DataSourceName(c.cfg))
 	if e != nil {
 		return e
 	}
+
 	if e := db.Ping(); e != nil {
 		return e
 	}
@@ -37,7 +33,7 @@ func (c *Connection) Connect() error {
 }
 
 func (c *Connection) Driver() Driver {
-	return c.driver
+	return c.drv
 }
 
 //Ping ...
@@ -66,7 +62,7 @@ func (c *Connection) Begin() (*Tx, error) {
 	if e != nil {
 		return nil, e
 	}
-	return &Tx{driver: c.driver, sqlTx: sqlTx}, nil
+	return &Tx{driver: c.drv, sqlTx: sqlTx}, nil
 }
 
 //MustBegin ...
@@ -89,7 +85,7 @@ func (c *Connection) MustExec(query string, args ...interface{}) *Result {
 
 //Exec ...
 func (c *Connection) Exec(query string, args ...interface{}) (*Result, error) {
-	return exec(c.driver, c.db.Exec, query, args...)
+	return exec(c.drv, c.db.Exec, query, args...)
 }
 
 //Get ...
@@ -144,17 +140,17 @@ func (c *Connection) Query(query string, args ...interface{}) (*Rows, error) {
 	if e != nil {
 		return nil, e
 	}
-	return newRows(c.driver, rows)
+	return newRows(c.drv, rows)
 }
 
 //Select ...
 func (c *Connection) Select(query string, args ...interface{}) ([]Resultset, error) {
-	return execQuery(c.driver, c.db.Query, query, args...)
+	return execQuery(c.drv, c.db.Query, query, args...)
 }
 
 //SelectStruct ...
 func (c *Connection) SelectStruct(dest interface{}, query string, args ...interface{}) error {
-	return execQueryStruct(c.driver, c.Select, dest, query, args...)
+	return execQueryStruct(c.drv, c.Select, dest, query, args...)
 }
 
 //MustInsert ...
@@ -185,7 +181,7 @@ func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*
 		idx++
 	}
 	q := InsertInto(tableName, strings.Join(fields, `, `)).Values(strings.Join(placeholders, `, `))
-	return c.Exec(c.driver.StatementString(q), values...)
+	return c.Exec(c.drv.StatementString(q), values...)
 }
 
 //EnumValues return enum values, parameter field using dot notation. Ex: profile.gender , returning ['male', 'female']
@@ -212,22 +208,4 @@ func (c *Connection) Close() error {
 		return nil
 	}
 	return c.db.Close()
-}
-
-func newConnection(driverName, hostname string, port int, username, password, name string) (*Connection, error) {
-	if port < 0 || port > 65535 {
-		return nil, fmt.Errorf(`invalid port %d`, port)
-	}
-
-	drv, e := getDriver(driverName)
-	if e != nil {
-		return nil, e
-	}
-	return &Connection{
-		driver:   drv,
-		hostname: hostname, port: port,
-		username: username, password: password,
-		name: name,
-	}, nil
-
 }

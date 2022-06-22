@@ -48,12 +48,16 @@ func (Driver) StatementString(s interface{}) string {
 	return ``
 }
 
-func (Driver) DataSourceName(hostname string, port int, username, password, name string) string {
+func (Driver) DataSourceName(cfg dbm.Config) string {
+	query := fmt.Sprintf(`database=%s&app+name=dbm&TrustServerCertificate=true`, cfg.Name)
+	if cfg.DisableEncryption {
+		query += `&encrypt=disable`
+	}
 	u := url.URL{
 		Scheme:   `sqlserver`,
-		User:     url.UserPassword(username, password),
-		Host:     fmt.Sprintf("%s:%d", hostname, port),
-		RawQuery: fmt.Sprintf(`database=%s&app+name=dbm&TrustServerCertificate=true`, name),
+		User:     url.UserPassword(cfg.Username, cfg.Password),
+		Host:     fmt.Sprintf("%s:%d", cfg.Hostname, cfg.Port),
+		RawQuery: query,
 	}
 	return u.String()
 }

@@ -41,11 +41,11 @@ func (Driver) StatementString(s interface{}) string {
 	return ``
 }
 
-func (Driver) DataSourceName(hostname string, port int, username, password, name string) string {
+func (Driver) DataSourceName(cfg dbm.Config) string {
 	return fmt.Sprintf(`%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local`,
-		username, password,
-		hostname, port,
-		name,
+		cfg.Username, cfg.Password,
+		cfg.Hostname, cfg.Port,
+		cfg.Name,
 	)
 }
 func (Driver) IsDuplicate(e error) bool {
