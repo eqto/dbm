@@ -18,10 +18,19 @@ type Connection struct {
 }
 
 //Connect ...
-func (c *Connection) Connect() error {
+func (c *Connection) Connect(opts ...Options) error {
 	db, e := sql.Open(c.cfg.DriverName, c.drv.DataSourceName(c.cfg))
 	if e != nil {
 		return e
+	}
+
+	OptionMaxIdleTime(60 * time.Second)(c)
+	OptionMaxLifetime(60 * time.Minute)(c)
+	OptionMaxIdle(2)(c)
+	OptionMaxOpen(50)(c)
+
+	for _, opt := range opts {
+		opt(c)
 	}
 
 	if e := db.Ping(); e != nil {

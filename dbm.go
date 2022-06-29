@@ -3,7 +3,6 @@ package dbm
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -14,26 +13,20 @@ type queryFunc func(string, ...interface{}) (*sql.Rows, error)
 type selectFunc func(string, ...interface{}) ([]Resultset, error)
 type execFunc func(string, ...interface{}) (sql.Result, error)
 
-func Connect(cfg Config) (*Connection, error) {
-	if cfg.Hostname == `` {
-		cfg.Hostname = `localhost`
-	}
-	if cfg.Port == 0 {
-		cfg.Port = 3306
-	}
-	if cfg.Port < 0 || cfg.Port > 65535 {
-		return nil, fmt.Errorf(`invalid port %d`, cfg.Port)
-	}
-
-	if cfg.DriverName == `` {
-		cfg.DriverName = `mysql`
-	}
-	drv, e := getDriver(cfg.DriverName)
+func Connect(driver, hostname string, port int, username, password, name string) (*Connection, error) {
+	drv, e := getDriver(driver)
 	if e != nil {
 		return nil, e
 	}
 
-	cn := &Connection{cfg: cfg, drv: drv}
+	cn := &Connection{cfg: Config{
+		DriverName: driver,
+		Hostname:   hostname,
+		Port:       port,
+		Username:   username,
+		Password:   password,
+		Name:       name,
+	}, drv: drv}
 
 	if e := cn.Connect(); e != nil {
 		return nil, e
