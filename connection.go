@@ -23,6 +23,7 @@ func (c *Connection) Connect(opts ...Options) error {
 	if e != nil {
 		return e
 	}
+	c.db = db
 
 	OptionMaxIdleTime(60 * time.Second)(c)
 	OptionMaxLifetime(60 * time.Minute)(c)
@@ -37,7 +38,6 @@ func (c *Connection) Connect(opts ...Options) error {
 		return e
 	}
 
-	c.db = db
 	return nil
 }
 
