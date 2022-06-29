@@ -17,22 +17,28 @@ type Connection struct {
 	drv Driver
 }
 
+func (c *Connection) applyOptions(opts ...Options) {
+	for _, opt := range opts {
+		opt(c)
+	}
+}
+
 //Connect ...
 func (c *Connection) Connect(opts ...Options) error {
+	c.applyOptions(opts...)
 	db, e := sql.Open(c.cfg.DriverName, c.drv.DataSourceName(c.cfg))
 	if e != nil {
 		return e
 	}
 	c.db = db
 
-	OptionMaxIdleTime(60 * time.Second)(c)
-	OptionMaxLifetime(60 * time.Minute)(c)
-	OptionMaxIdle(2)(c)
-	OptionMaxOpen(50)(c)
+	c.applyOptions([]Options{
+		OptionMaxIdleTime(60 * time.Second),
+		OptionMaxLifetime(60 * time.Minute),
+		OptionMaxIdle(2),
+		OptionMaxOpen(50)}...)
 
-	for _, opt := range opts {
-		opt(c)
-	}
+	c.applyOptions(opts...)
 
 	if e := db.Ping(); e != nil {
 		return e
