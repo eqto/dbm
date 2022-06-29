@@ -13,7 +13,7 @@ type queryFunc func(string, ...interface{}) (*sql.Rows, error)
 type selectFunc func(string, ...interface{}) ([]Resultset, error)
 type execFunc func(string, ...interface{}) (sql.Result, error)
 
-func Connect(driver, hostname string, port int, username, password, name string) (*Connection, error) {
+func Connect(driver, hostname string, port int, username, password, name string, opts ...Options) (*Connection, error) {
 	drv, e := getDriver(driver)
 	if e != nil {
 		return nil, e
@@ -28,7 +28,7 @@ func Connect(driver, hostname string, port int, username, password, name string)
 		Name:       name,
 	}, drv: drv}
 
-	if e := cn.Connect(); e != nil {
+	if e := cn.Connect(opts...); e != nil {
 		return nil, e
 	}
 	return cn, nil
