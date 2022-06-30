@@ -13,7 +13,7 @@ func OptionMaxIdleTime(duration time.Duration) Options {
 	}
 }
 
-//OptionMaxLifetime default is 60 minutes
+//OptionMaxLifetime default is 5 minutes
 func OptionMaxLifetime(duration time.Duration) Options {
 	return func(c *Connection) {
 		if c.db != nil {
