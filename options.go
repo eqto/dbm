@@ -31,7 +31,7 @@ func OptionMaxIdle(count int) Options {
 	}
 }
 
-//OptionMaxOpen default is 50
+//OptionMaxOpen default is 0 (unlimited)
 func OptionMaxOpen(count int) Options {
 	return func(c *Connection) {
 		if c.db != nil {

@@ -35,8 +35,7 @@ func (c *Connection) Connect(opts ...Options) error {
 	c.applyOptions([]Options{
 		OptionMaxIdleTime(60 * time.Second),
 		OptionMaxLifetime(5 * time.Minute),
-		OptionMaxIdle(2),
-		OptionMaxOpen(50)}...)
+		OptionMaxIdle(2)}...)
 
 	c.applyOptions(opts...)
 
