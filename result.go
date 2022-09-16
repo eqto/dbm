@@ -4,13 +4,16 @@ import (
 	"database/sql"
 )
 
-//Result ...
+// Result ...
 type Result struct {
 	result sql.Result
 }
 
-//LastInsertID ...
+// LastInsertID ...
 func (r *Result) LastInsertID() (ID int, e error) {
+	if r.result == nil {
+		return 0, nil
+	}
 	id, e := r.result.LastInsertId()
 	if e != nil {
 		return 0, e
@@ -18,7 +21,7 @@ func (r *Result) LastInsertID() (ID int, e error) {
 	return int(id), nil
 }
 
-//MustLastInsertID ...
+// MustLastInsertID ...
 func (r *Result) MustLastInsertID() int {
 	id, e := r.LastInsertID()
 	if e != nil {
@@ -27,8 +30,11 @@ func (r *Result) MustLastInsertID() int {
 	return id
 }
 
-//RowsAffected ...
+// RowsAffected ...
 func (r *Result) RowsAffected() (int, error) {
+	if r.result == nil {
+		return 0, nil
+	}
 	val, e := r.result.RowsAffected()
 	if e != nil {
 		return 0, e
@@ -36,7 +42,7 @@ func (r *Result) RowsAffected() (int, error) {
 	return int(val), nil
 }
 
-//MustRowsAffected ...
+// MustRowsAffected ...
 func (r *Result) MustRowsAffected() int {
 	row, e := r.RowsAffected()
 	if e != nil {
