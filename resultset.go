@@ -8,15 +8,15 @@ import (
 	"time"
 )
 
-//Resultset ...
+// Resultset ...
 type Resultset map[string]interface{}
 
-//Int ...
+// Int ...
 func (r Resultset) Int(name string) int {
 	return r.IntOr(name, 0)
 }
 
-//IntOr ...
+// IntOr ...
 func (r Resultset) IntOr(name string, defValue int) int {
 	if val := r.IntNil(name); val != nil {
 		return *val
@@ -24,7 +24,7 @@ func (r Resultset) IntOr(name string, defValue int) int {
 	return defValue
 }
 
-//IntNil ...
+// IntNil ...
 func (r Resultset) IntNil(name string) *int {
 	if val, ok := r[name]; ok && val != nil {
 		vof := reflect.ValueOf(val)
@@ -97,7 +97,28 @@ func (r Resultset) IntNil(name string) *int {
 	return nil
 }
 
-//Time ...
+// Bool return boolean value or false if not exist
+func (r Resultset) Bool(name string) bool {
+	if val := r.BoolNil(name); val != nil {
+		return *val
+	}
+	return false
+}
+
+// Bool return boolean value or nil if not exist
+func (r Resultset) BoolNil(name string) *bool {
+	i := r.IntNil(name)
+	if i == nil {
+		return nil
+	}
+	val := true
+	if *i == 0 {
+		val = false
+	}
+	return &val
+}
+
+// Time ...
 func (r Resultset) Time(name string) time.Time {
 	if val := r.TimeNil(name); val != nil {
 		return *val
@@ -105,7 +126,7 @@ func (r Resultset) Time(name string) time.Time {
 	return time.Time{}
 }
 
-//TimeNil ...
+// TimeNil ...
 func (r Resultset) TimeNil(name string) *time.Time {
 	if val, ok := r[name]; ok && val != nil {
 		vof := reflect.ValueOf(val)
@@ -134,12 +155,12 @@ func (r Resultset) TimeNil(name string) *time.Time {
 	return nil
 }
 
-//Float ...
+// Float ...
 func (r Resultset) Float(name string) float64 {
 	return r.FloatOr(name, 0)
 }
 
-//FloatOr ...
+// FloatOr ...
 func (r Resultset) FloatOr(name string, defValue float64) float64 {
 	if val := r.FloatNil(name); val != nil {
 		return *val
@@ -147,7 +168,7 @@ func (r Resultset) FloatOr(name string, defValue float64) float64 {
 	return defValue
 }
 
-//FloatNil ...
+// FloatNil ...
 func (r Resultset) FloatNil(name string) *float64 {
 	if val, ok := r[name]; ok && val != nil {
 		vof := reflect.ValueOf(val)
@@ -204,12 +225,12 @@ func (r Resultset) FloatNil(name string) *float64 {
 	return nil
 }
 
-//String ...
+// String ...
 func (r Resultset) String(name string) string {
 	return r.StringOr(name, ``)
 }
 
-//StringOr ...
+// StringOr ...
 func (r Resultset) StringOr(name string, defValue string) string {
 	if val := r.StringNil(name); val != nil {
 		return *val
@@ -217,7 +238,7 @@ func (r Resultset) StringOr(name string, defValue string) string {
 	return defValue
 }
 
-//StringNil ...
+// StringNil ...
 func (r Resultset) StringNil(name string) *string {
 	if val, ok := r[name]; ok && val != nil {
 		vof := reflect.ValueOf(val)
@@ -282,7 +303,7 @@ func (r Resultset) StringNil(name string) *string {
 	return nil
 }
 
-//Bytes ...
+// Bytes ...
 func (r Resultset) Bytes(name string) []byte {
 	if val, ok := r[name]; ok && val != nil {
 		vof := reflect.ValueOf(val)
@@ -308,7 +329,7 @@ func (r Resultset) Bytes(name string) []byte {
 	return nil
 }
 
-//Interface ...
+// Interface ...
 func (r Resultset) Interface(name string) interface{} {
 	if val := r.getValue(name); val != nil {
 		return val.Interface()

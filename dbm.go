@@ -81,9 +81,10 @@ func assignStruct(dest interface{}, fieldMap map[string]string, rs Resultset, ty
 				val = rs.FloatNil(key)
 			case reflect.TypeOf(time.Time{}).Kind():
 				val = rs.TimeNil(key)
+			case reflect.Bool:
+				val = rs.BoolNil(key)
 			default:
-				println(`unsupported type: ` + key + `:` + kind.String())
-				return errors.New(`unsupported type: ` + key + `:` + kind.String())
+				return errors.New(`unsupported ptr type: ` + key + `:` + kind.String())
 			}
 		} else {
 			switch kind {
@@ -95,8 +96,9 @@ func assignStruct(dest interface{}, fieldMap map[string]string, rs Resultset, ty
 				val = rs.Float(key)
 			case reflect.TypeOf(time.Time{}).Kind():
 				val = rs.Time(key)
+			case reflect.Bool:
+				val = rs.Bool(key)
 			default:
-				println(`unsupported type: ` + key + `:` + kind.String())
 				return errors.New(`unsupported type: ` + key + `:` + kind.String())
 			}
 		}
