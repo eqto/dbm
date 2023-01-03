@@ -16,9 +16,15 @@ func Parse(s string) interface{} {
 
 	switch strings.ToUpper(command) {
 	case `SELECT`:
-		RegexStr := `SELECT\s+(?:(?P<distinct>DISTINCT|)\s+|)(?P<fields>.+)\s+FROM\s+(?P<tables>.+)` + `(?:\s+WHERE\s+(?P<where>.+)|)` + `(?:\s+GROUP\s+BY\s+(?P<groupby>.+)|)` + `(?:\s+ORDER\s+BY\s+(?P<orderby>.+)|)` + `(?:\s+LIMIT\s+(?:(?P<offset>[0-9]+)\s*[,]\s*(?P<count>[0-9]+)|(?P<count>[0-9]+))|\s+OFFSET\s+(?P<offset>[0-9]+)\s+ROWS\s+FETCH\s+NEXT\s+(?P<count>[0-9]+)\s+ROWS\s+ONLY|)`
+		regexStr := `SELECT (?:(?P<distinct>DISTINCT|) |)(?P<fields>.+) FROM (?P<tables>.+)` +
+			`(?: WHERE (?P<where>.+)|)` +
+			`(?: GROUP BY (?P<groupby>.+)|)` +
+			`(?: ORDER BY (?P<orderby>.+)|)` +
+			`(?: LIMIT (?:(?P<offset>[0-9]+)\s*[,]\s*(?P<count>[0-9]+)|(?P<count>[0-9]+))| OFFSET (?P<offset>[0-9]+) ROWS FETCH NEXT (?P<count>[0-9]+) ROWS ONLY|)(;|)`
 
-		regex := regexp.MustCompile(fmt.Sprintf(`(?Uis)^\s*(?:%s)\s*$`, RegexStr))
+		regexStr = strings.ReplaceAll(regexStr, ` `, `\s+`)
+
+		regex := regexp.MustCompile(fmt.Sprintf(`(?Uis)^\s*(?:%s)\s*$`, regexStr))
 
 		matches := regex.FindStringSubmatch(s)
 
