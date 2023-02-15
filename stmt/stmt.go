@@ -51,6 +51,8 @@ func TableOf(stmt interface{}) string {
 		return stmt.table
 	case *Update:
 		return stmt.table
+	case *Delete:
+		return stmt.table
 	}
 	return ``
 }
@@ -71,6 +73,8 @@ func WheresOf(stmt interface{}) []WhereParam {
 	case *Select:
 		return stmt.wheres
 	case *Update:
+		return stmt.wheres
+	case *Delete:
 		return stmt.wheres
 	}
 	return nil

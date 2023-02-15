@@ -17,6 +17,10 @@ func (Builder) Update(table string) *Update {
 	return &Update{table: table}
 }
 
+func (Builder) DeleteFrom(table string) *Delete {
+	return &Delete{table: table}
+}
+
 func Build() Builder {
 	return Builder{}
 }

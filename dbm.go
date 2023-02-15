@@ -46,6 +46,10 @@ func Update(table string) *stmt.Update {
 	return stmt.Build().Update(table)
 }
 
+func DeleteFrom(table string) *stmt.Delete {
+	return stmt.Build().DeleteFrom(table)
+}
+
 func createFieldMap(el reflect.Type) map[string]string {
 	//[dbtag]fieldname
 	fieldMap := make(map[string]string)

@@ -1,6 +1,7 @@
 package stmt
 
 type Update struct {
+	whereStatement
 	table     string
 	namevalue []string
 	wheres    []WhereParam
@@ -10,8 +11,13 @@ type UpdateFields struct {
 	stmt *Update
 }
 
-//Set keyvalue pair to set
-//Ex:
+func (u *Update) where(param WhereParam) {
+	u.wheres = append(u.wheres, param)
+}
+
+// Set keyvalue pair to set
+// Ex:
+//
 //	UPDATE books SET title = ?, publisher = ?
 //	dbx.Update(`books`).Set(`title = ?`).Set(`publisher = ?`)
 func (u *Update) Set(namevalue string) *UpdateFields {

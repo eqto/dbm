@@ -37,6 +37,8 @@ func (Driver) StatementString(s interface{}) string {
 		return insertStatement(s)
 	case *stmt.Update:
 		return updateStatement(s)
+	case *stmt.Delete:
+		return deleteStatement(s)
 	}
 	return ``
 }
