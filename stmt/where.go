@@ -2,6 +2,8 @@ package stmt
 
 type whereStatement interface {
 	where(WhereParam)
+	orderBy(string)
+	limit(int)
 }
 
 type WhereParam struct {

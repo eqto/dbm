@@ -5,10 +5,8 @@ type Update struct {
 	table     string
 	namevalue []string
 	wheres    []WhereParam
-}
-
-type UpdateFields struct {
-	stmt *Update
+	order     string
+	count     int
 }
 
 func (u *Update) where(param WhereParam) {
@@ -19,14 +17,22 @@ func (u *Update) where(param WhereParam) {
 // Ex:
 //
 //	UPDATE books SET title = ?, publisher = ?
-//	dbx.Update(`books`).Set(`title = ?`).Set(`publisher = ?`)
-func (u *Update) Set(namevalue string) *UpdateFields {
-	u.namevalue = append(u.namevalue, namevalue)
+//	dbx.Update(`books`).Set(`title = ?`, `publisher = ?`).Set(`publisher = ?`)
+func (u *Update) Set(namevalues ...string) *UpdateFields {
+	u.namevalue = append(u.namevalue, namevalues...)
 	return &UpdateFields{stmt: u}
 }
 
-func (u *UpdateFields) Set(keyvalue string) *UpdateFields {
-	return u.stmt.Set(keyvalue)
+func (u *Update) orderBy(orderBy string) {
+	u.order = orderBy
+}
+
+func (u *Update) limit(count int) {
+	u.count = count
+}
+
+type UpdateFields struct {
+	stmt *Update
 }
 
 func (u *UpdateFields) Where(condition string) *UpdateWhere {

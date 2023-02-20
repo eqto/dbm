@@ -27,6 +27,12 @@ func updateStatement(s *stmt.Update) string {
 			sql.WriteString(where.Condition)
 		}
 	}
+	if orderBy := stmt.OrderByOf(s); orderBy != `` {
+		sql.WriteString(fmt.Sprintf(` ORDER BY %s`, orderBy))
+	}
+	if _, count := stmt.LimitOf(s); count > 0 {
+		sql.WriteString(fmt.Sprintf(` LIMIT  %d`, count))
+	}
 
 	return sql.String()
 }

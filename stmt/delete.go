@@ -1,9 +1,10 @@
 package stmt
 
 type Delete struct {
-	whereStatement
 	table  string
 	wheres []WhereParam
+	order  string
+	count  int
 }
 
 func (d *Delete) where(param WhereParam) {
@@ -18,4 +19,12 @@ func (d *Delete) Where(conditions ...string) *UpdateWhere {
 		}
 	}
 	return &UpdateWhere{d}
+}
+
+func (d *Delete) orderBy(orderBy string) {
+	d.order = orderBy
+}
+
+func (d *Delete) limit(count int) {
+	d.count = count
 }

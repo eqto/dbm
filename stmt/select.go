@@ -8,8 +8,8 @@ type Select struct {
 	fields        SelectFields
 	tables        Tables
 	wheres        []WhereParam
-	groupBy       string
-	orderBy       string
+	group         string
+	order         string
 	offset, count int
 }
 
@@ -36,12 +36,12 @@ func (s *Select) Where(conditions ...string) *SelectWhere {
 }
 
 func (s *Select) GroupBy(groupBy string) *GroupBy {
-	s.groupBy = groupBy
+	s.group = groupBy
 	return &GroupBy{s}
 }
 
 func (s *Select) OrderBy(orderBy string) *OrderBy {
-	s.orderBy = orderBy
+	s.order = orderBy
 	return &OrderBy{s}
 }
 

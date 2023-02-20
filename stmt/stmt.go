@@ -9,8 +9,8 @@ func Copy(dest, src interface{}) error {
 			dest.fields = src.fields
 			dest.tables = src.tables
 			dest.wheres = src.wheres
-			dest.groupBy = src.groupBy
-			dest.orderBy = src.orderBy
+			dest.group = src.group
+			dest.order = src.order
 			dest.offset = src.offset
 			dest.count = src.count
 			return nil
@@ -81,13 +81,29 @@ func WheresOf(stmt interface{}) []WhereParam {
 }
 
 func GroupByOf(stmt *Select) string {
-	return stmt.groupBy
+	return stmt.group
 }
 
-func OrderByOf(stmt *Select) string {
-	return stmt.orderBy
+func OrderByOf(stmt interface{}) string {
+	switch stmt := stmt.(type) {
+	case *Select:
+		return stmt.order
+	case *Delete:
+		return stmt.order
+	case *Update:
+		return stmt.order
+	}
+	return ``
 }
 
-func LimitOf(stmt *Select) (int, int) {
-	return stmt.offset, stmt.count
+func LimitOf(stmt interface{}) (int, int) {
+	switch stmt := stmt.(type) {
+	case *Select:
+		return stmt.offset, stmt.count
+	case *Delete:
+		return 0, stmt.count
+	case *Update:
+		return 0, stmt.count
+	}
+	return 0, 0
 }
