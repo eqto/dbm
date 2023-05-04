@@ -17,6 +17,16 @@ type Connection struct {
 	drv Driver
 }
 
+func nilCheck(c *Connection) error {
+	if c.db == nil {
+		return ErrConnectionNotFound
+	}
+	if c.drv == nil {
+		return ErrDriverNotDefined
+	}
+	return nil
+}
+
 func (c *Connection) applyOptions(opts ...Options) {
 	for _, opt := range opts {
 		opt(c)
@@ -25,6 +35,9 @@ func (c *Connection) applyOptions(opts ...Options) {
 
 // Connect ...
 func (c *Connection) Connect(opts ...Options) error {
+	if e := nilCheck(c); e != nil {
+		return e
+	}
 	c.applyOptions(opts...)
 	db, e := sql.Open(c.cfg.DriverName, c.drv.DataSourceName(c.cfg))
 	if e != nil {
@@ -52,6 +65,9 @@ func (c *Connection) Driver() Driver {
 
 // Ping ...
 func (c *Connection) Ping() error {
+	if e := nilCheck(c); e != nil {
+		return e
+	}
 	return c.db.Ping()
 }
 
@@ -72,6 +88,9 @@ func (c *Connection) SetMaxOpenConns(max int) {
 
 // Begin ...
 func (c *Connection) Begin() (*Tx, error) {
+	if e := nilCheck(c); e != nil {
+		return nil, e
+	}
 	sqlTx, e := c.db.Begin()
 	if e != nil {
 		return nil, e
@@ -99,6 +118,9 @@ func (c *Connection) MustExec(query string, args ...interface{}) *Result {
 
 // Exec ...
 func (c *Connection) Exec(query string, args ...interface{}) (*Result, error) {
+	if e := nilCheck(c); e != nil {
+		return nil, e
+	}
 	return exec(c.drv, c.db.Exec, query, args...)
 }
 
@@ -124,9 +146,12 @@ func (c *Connection) MustGet(query string, args ...interface{}) Resultset {
 
 // GetStruct ...
 func (c *Connection) GetStruct(dest interface{}, query string, args ...interface{}) error {
+	if dest == nil {
+		return errors.New(`parameter dest is nil`)
+	}
 	typeOf := reflect.TypeOf(dest)
 	if typeOf.Kind() != reflect.Ptr {
-		return errors.New(`dest is not a pointer`)
+		return errors.New(`parameter dest is not a pointer`)
 	}
 
 	rs, e := c.Get(query, args...)
@@ -150,6 +175,9 @@ func (c *Connection) MustSelect(query string, args ...interface{}) []Resultset {
 }
 
 func (c *Connection) Query(query string, args ...interface{}) (*Rows, error) {
+	if e := nilCheck(c); e != nil {
+		return nil, e
+	}
 	rows, e := c.db.Query(query, args...)
 	if e != nil {
 		return nil, e
@@ -159,11 +187,17 @@ func (c *Connection) Query(query string, args ...interface{}) (*Rows, error) {
 
 // Select ...
 func (c *Connection) Select(query string, args ...interface{}) ([]Resultset, error) {
+	if e := nilCheck(c); e != nil {
+		return nil, e
+	}
 	return execQuery(c.drv, c.db.Query, query, args...)
 }
 
 // SelectStruct ...
 func (c *Connection) SelectStruct(dest interface{}, query string, args ...interface{}) error {
+	if e := nilCheck(c); e != nil {
+		return e
+	}
 	return execQueryStruct(c.drv, c.Select, dest, query, args...)
 }
 
@@ -178,6 +212,9 @@ func (c *Connection) MustInsert(tableName string, dataMap map[string]interface{}
 
 // Insert ...
 func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
+	if e := nilCheck(c); e != nil {
+		return nil, e
+	}
 	length := len(dataMap)
 	fields := make([]string, length)
 	values := []interface{}{}
@@ -199,12 +236,18 @@ func (c *Connection) Insert(tableName string, dataMap map[string]interface{}) (*
 }
 
 func (c *Connection) SQL(stmt interface{}) string {
-	return c.Driver().StatementString(stmt)
+	if c.drv != nil {
+		return c.drv.StatementString(stmt)
+	}
+	return ``
 }
 
 // EnumValues return enum values, parameter field using dot notation. Ex: profile.gender , returning ['male', 'female']
 func (c *Connection) EnumValues(field string) ([]string, error) {
 	cols := strings.Split(field, `.`)
+	if len(cols) != 2 {
+		return nil, errors.New(`invalid parameter field:` + field)
+	}
 	enum, e := c.Get(`SELECT column_type FROM information_schema.columns WHERE table_name = ?
 		AND column_name = ?`, cols[0], cols[1])
 	if e != nil {

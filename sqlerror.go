@@ -1,8 +1,16 @@
 package dbm
 
 const (
-	errRecordNotFound = `record not found`
+	errRecordNotFound     = `record not found`
+	ErrConnectionNotFound = Error(`connection not found`)
+	ErrDriverNotDefined   = Error(`database driver not defined`)
 )
+
+type Error string
+
+func (e Error) Error() string {
+	return string(e)
+}
 
 type sqlError struct {
 	drv Driver
