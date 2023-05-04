@@ -35,8 +35,8 @@ func (c *Connection) applyOptions(opts ...Options) {
 
 // Connect ...
 func (c *Connection) Connect(opts ...Options) error {
-	if e := nilCheck(c); e != nil {
-		return e
+	if c.drv == nil {
+		return ErrDriverNotDefined
 	}
 	c.applyOptions(opts...)
 	db, e := sql.Open(c.cfg.DriverName, c.drv.DataSourceName(c.cfg))
