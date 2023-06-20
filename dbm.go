@@ -4,9 +4,21 @@ import (
 	"database/sql"
 	"errors"
 	"reflect"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/eqto/dbm/stmt"
+)
+
+const (
+	DriverMySQL     = `mysql`
+	DriverSQLServer = `sqlserver`
+)
+
+var (
+	matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 )
 
 type queryFunc func(string, ...interface{}) (*sql.Rows, error)
@@ -50,6 +62,11 @@ func DeleteFrom(table string) *stmt.Delete {
 	return stmt.Build().DeleteFrom(table)
 }
 
+func toFieldname(str string) string {
+	fieldname := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	fieldname = matchAllCap.ReplaceAllString(fieldname, "${1}_${2}")
+	return strings.ToLower(fieldname)
+}
 func createFieldMap(el reflect.Type) map[string]string {
 	//[dbtag]fieldname
 	fieldMap := make(map[string]string)
@@ -60,6 +77,8 @@ func createFieldMap(el reflect.Type) map[string]string {
 		dbTag := field.Tag.Get(`db`)
 		if dbTag != `` {
 			fieldMap[dbTag] = field.Name
+		} else {
+			fieldMap[toFieldname(field.Name)] = field.Name
 		}
 	}
 	return fieldMap
