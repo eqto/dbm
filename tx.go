@@ -7,14 +7,12 @@ import (
 	"strings"
 )
 
-//Tx ...
 type Tx struct {
 	driver Driver
 	sqlTx  *sql.Tx
 	finish bool
 }
 
-//MustRecover ...
 func (t *Tx) MustRecover() {
 	if r := recover(); r != nil {
 		t.Rollback()
@@ -23,7 +21,6 @@ func (t *Tx) MustRecover() {
 	t.Commit()
 }
 
-//Recover ...
 func (t *Tx) Recover() {
 	if r := recover(); r != nil {
 		t.Rollback()
@@ -32,7 +29,6 @@ func (t *Tx) Recover() {
 	}
 }
 
-//Commit ...
 func (t *Tx) Commit() error {
 	if t == nil {
 		return errors.New(`Connection already closed`)
@@ -44,7 +40,6 @@ func (t *Tx) Commit() error {
 	return t.sqlTx.Commit()
 }
 
-//Rollback ...
 func (t *Tx) Rollback() error {
 	if t == nil {
 		return errors.New(`Connection already closed`)
@@ -56,7 +51,6 @@ func (t *Tx) Rollback() error {
 	return t.sqlTx.Rollback()
 }
 
-//MustInsert ...
 func (t *Tx) MustInsert(tableName string, dataMap map[string]interface{}) *Result {
 	if rs, e := t.Insert(tableName, dataMap); e != nil {
 		panic(e)
@@ -65,7 +59,6 @@ func (t *Tx) MustInsert(tableName string, dataMap map[string]interface{}) *Resul
 	}
 }
 
-//MustSelect ...
 func (t *Tx) MustSelect(query string, args ...interface{}) []Resultset {
 	if rs, e := t.Select(query, args...); e != nil {
 		panic(e)
@@ -74,17 +67,14 @@ func (t *Tx) MustSelect(query string, args ...interface{}) []Resultset {
 	}
 }
 
-//Select ...
 func (t *Tx) Select(query string, args ...interface{}) ([]Resultset, error) {
 	return execQuery(t.driver, t.sqlTx.Query, query, args...)
 }
 
-//SelectStruct ...
 func (t *Tx) SelectStruct(dest interface{}, query string, args ...interface{}) error {
 	return execQueryStruct(t.driver, t.Select, dest, query, args...)
 }
 
-//Get ...
 func (t *Tx) Get(query string, args ...interface{}) (Resultset, error) {
 	rs, e := t.Select(query, args...)
 	if e != nil {
@@ -95,7 +85,6 @@ func (t *Tx) Get(query string, args ...interface{}) (Resultset, error) {
 	return rs[0], nil
 }
 
-//MustGet ...
 func (t *Tx) MustGet(query string, args ...interface{}) Resultset {
 	rs, e := t.Get(query, args...)
 	if e != nil {
@@ -104,7 +93,6 @@ func (t *Tx) MustGet(query string, args ...interface{}) Resultset {
 	return rs
 }
 
-//GetStruct ...
 func (t *Tx) GetStruct(dest interface{}, query string, args ...interface{}) error {
 	typeOf := reflect.TypeOf(dest)
 	if typeOf.Kind() != reflect.Ptr {
@@ -122,12 +110,10 @@ func (t *Tx) GetStruct(dest interface{}, query string, args ...interface{}) erro
 	return assignStruct(dest, createFieldMap(typeOf), rs, typeOf)
 }
 
-//Exec ...
 func (t *Tx) Exec(query string, args ...interface{}) (*Result, error) {
 	return exec(t.driver, t.sqlTx.Exec, query, args...)
 }
 
-//MustExec ...
 func (t *Tx) MustExec(query string, args ...interface{}) *Result {
 	result, e := t.Exec(query, args...)
 	if e != nil {
@@ -136,7 +122,6 @@ func (t *Tx) MustExec(query string, args ...interface{}) *Result {
 	return result
 }
 
-//Insert ...
 func (t *Tx) Insert(tableName string, dataMap map[string]interface{}) (*Result, error) {
 	length := len(dataMap)
 	fields := make([]string, length)
