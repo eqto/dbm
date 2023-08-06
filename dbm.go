@@ -76,9 +76,14 @@ func createFieldMap(el reflect.Type) map[string]string {
 		field := el.Field(i)
 		dbTag := field.Tag.Get(`db`)
 		if dbTag != `` {
-			fieldMap[dbTag] = field.Name
+			if dbTag != `-` {
+				fieldMap[dbTag] = field.Name
+			}
 		} else {
-			fieldMap[toFieldname(field.Name)] = field.Name
+			first := field.Name[0:1]
+			if strings.ToUpper(first) == first {
+				fieldMap[toFieldname(field.Name)] = field.Name
+			}
 		}
 	}
 	return fieldMap
@@ -93,7 +98,10 @@ func assignStruct(dest interface{}, fieldMap map[string]string, rs Resultset, ty
 		var val interface{}
 		kind := field.Type.Kind()
 
-		if kind == reflect.Ptr {
+		switch kind {
+		case reflect.Func:
+			continue
+		case reflect.Ptr:
 			kind = field.Type.Elem().Kind()
 			switch kind {
 			case reflect.String:
@@ -109,7 +117,7 @@ func assignStruct(dest interface{}, fieldMap map[string]string, rs Resultset, ty
 			default:
 				return errors.New(`unsupported ptr type: ` + key + `:` + kind.String())
 			}
-		} else {
+		default:
 			switch kind {
 			case reflect.String:
 				val = rs.String(key)
@@ -125,6 +133,7 @@ func assignStruct(dest interface{}, fieldMap map[string]string, rs Resultset, ty
 				return errors.New(`unsupported type: ` + key + `:` + kind.String())
 			}
 		}
+
 		val = reflect.ValueOf(val)
 		valField.Set(val.(reflect.Value))
 	}
