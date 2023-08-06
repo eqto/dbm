@@ -74,15 +74,22 @@ func createFieldMap(el reflect.Type) map[string]string {
 
 	for i := 0; i < numField; i++ {
 		field := el.Field(i)
-		dbTag := field.Tag.Get(`db`)
-		if dbTag != `` {
-			if dbTag != `-` {
-				fieldMap[dbTag] = field.Name
+		if field.Anonymous {
+			subfieldMap := createFieldMap(field.Type)
+			for key, val := range subfieldMap {
+				fieldMap[key] = val
 			}
 		} else {
-			first := field.Name[0:1]
-			if strings.ToUpper(first) == first {
-				fieldMap[toFieldname(field.Name)] = field.Name
+			dbTag := field.Tag.Get(`db`)
+			if dbTag != `` {
+				if dbTag != `-` {
+					fieldMap[dbTag] = field.Name
+				}
+			} else {
+				first := field.Name[0:1]
+				if strings.ToUpper(first) == first {
+					fieldMap[toFieldname(field.Name)] = field.Name
+				}
 			}
 		}
 	}
