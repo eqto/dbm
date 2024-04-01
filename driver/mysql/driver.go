@@ -124,6 +124,9 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 			case `NullTime`:
 				t := new(time.Time)
 				val = &t
+			case `NullString`:
+				t := new(string)
+				val = &t
 			default:
 				println(`Not supporting struct `, scanType.Name(), ` yet.`)
 			}
