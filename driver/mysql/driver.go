@@ -83,6 +83,8 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 			val = new(float32)
 		case reflect.Float64:
 			val = new(float64)
+		case reflect.String:
+			val = new(string)
 		case reflect.Slice:
 			nullable, ok := colType.Nullable()
 			if !ok {
