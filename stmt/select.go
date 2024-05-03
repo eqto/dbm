@@ -27,7 +27,6 @@ func (s *Select) RightJoin(table, on string) *Select {
 
 func (s *Select) Where(conditions ...string) *SelectWhere {
 	if len(conditions) > 0 {
-		s.wheres = []WhereParam{}
 		for _, c := range conditions {
 			s.wheres = append(s.wheres, WhereParam{c, false})
 		}
