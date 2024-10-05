@@ -59,6 +59,13 @@ func (c *Connection) Connect(opts ...Options) error {
 	return nil
 }
 
+func (c *Connection) Close() {
+	if c.db == nil {
+		c.db.Close()
+		c.db = nil
+	}
+}
+
 func (c *Connection) Driver() Driver {
 	return c.drv
 }
