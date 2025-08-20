@@ -98,7 +98,7 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 				} else {
 					val = f
 				}
-			case `CHAR`, `VARCHAR`, `TEXT`, `JSON`:
+			case `CHAR`, `VARCHAR`, `TEXT`, `JSON`, `LONGTEXT`:
 				s := new(string)
 				if nullable {
 					val = &s
@@ -106,7 +106,7 @@ func (Driver) BuildContents(colTypes []*sql.ColumnType) ([]interface{}, error) {
 					val = s
 				}
 			default:
-				println(`Not supporting `, colType.DatabaseTypeName(), ` yet.`)
+				println(`Not supporting `, colType.DatabaseTypeName(), ` yet. using []byte`)
 				b := new([]byte)
 				if nullable {
 					val = &b
