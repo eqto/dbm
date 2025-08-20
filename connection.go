@@ -59,11 +59,11 @@ func (c *Connection) Connect(opts ...Options) error {
 	return nil
 }
 
-func (c *Connection) Close() {
+func (c *Connection) Close() error {
 	if c.db == nil {
-		c.db.Close()
-		c.db = nil
+		return nil
 	}
+	return c.db.Close()
 }
 
 func (c *Connection) Driver() Driver {
@@ -268,12 +268,4 @@ func (c *Connection) EnumValues(field string) ([]string, error) {
 		values[i] = strings.Trim(values[i], `'`)
 	}
 	return values, nil
-}
-
-// Close ...
-func (c *Connection) Close() error {
-	if c.db == nil {
-		return nil
-	}
-	return c.db.Close()
 }
